@@ -1,19 +1,19 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+} from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import {
-    Alert,
-    FlatList,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import AnnouncementCard from '../../components/AnnouncementCard';
-import FilterModal from '../../components/FilterModal';
 import { apiService } from '../../services/api';
 import { Announcement, User } from '../../types';
+import AnnouncementCard from '../../components/AnnouncementCard';
+import FilterModal from '../../components/FilterModal';
 
 export default function AnnouncementsScreen() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

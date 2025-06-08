@@ -1,19 +1,19 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { router } from 'expo-router';
 import React from 'react';
 import {
-  View,
+  Image,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Image,
+  View,
 } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Announcement } from '../types';
-import { router } from 'expo-router';
 
 interface AnnouncementCardProps {
   announcement: Announcement;
   onPress: () => void;
-  currentUserId?: string;
+  currentUserId?: number;
   showMatchButton?: boolean;
 }
 
@@ -24,8 +24,8 @@ export default function AnnouncementCard({
   showMatchButton = false,
 }: AnnouncementCardProps) {
   const isOwner = currentUserId === announcement.userId;
-  const typeColor = announcement.type === 'LOST' ? '#FF6B6B' : '#4ECDC4';
-  const typeText = announcement.type === 'LOST' ? 'Perdu' : 'Trouvé';
+  const typeColor = announcement.type === 'perdu' ? '#FF6B6B' : '#4ECDC4';
+  const typeText = announcement.type === 'perdu' ? 'Perdu' : 'Trouvé';
 
   const handleMatchPress = (e: any) => {
     e.stopPropagation();
@@ -37,7 +37,7 @@ export default function AnnouncementCard({
       <View style={styles.cardHeader}>
         <View style={[styles.typeLabel, { backgroundColor: typeColor }]}>
           <FontAwesome 
-            name={announcement.type === 'LOST' ? 'search' : 'check-circle'} 
+            name={announcement.type === 'perdu' ? 'search' : 'check-circle'} 
             size={16} 
             color="white" 
           />
@@ -50,12 +50,12 @@ export default function AnnouncementCard({
 
       <View style={styles.cardContent}>
         {announcement.photo && (
-          <Image source={{ uri: announcement.photo }} style={styles.image} />
+          <Image source={{ uri: `data:image/jpeg;base64,${announcement.photo.data}` }} style={styles.image} />
         )}
         
         <View style={styles.textContent}>
           <Text style={styles.title} numberOfLines={2}>
-            {announcement.title}
+            {announcement.titre_annonce}
           </Text>
           <Text style={styles.description} numberOfLines={2}>
             {announcement.description}
@@ -65,10 +65,10 @@ export default function AnnouncementCard({
             <View style={styles.locationContainer}>
               <FontAwesome name="map-marker" size={16} color="#666" />
               <Text style={styles.location}>
-                {announcement.city} ({announcement.postalCode})
+                {announcement.ville} ({announcement.codePostal})
               </Text>
             </View>
-            <Text style={styles.category}>{announcement.category.name}</Text>
+            <Text style={styles.category}>{announcement.categorie_libelle}</Text>
           </View>
 
           <Text style={styles.date}>

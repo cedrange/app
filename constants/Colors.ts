@@ -1,26 +1,159 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-const tintColorLight = '#0a7ea4';
+const tintColorLight = '#007AFF';
 const tintColorDark = '#fff';
 
-export const Colors = {
+export default {
   light: {
-    text: '#11181C',
+    text: '#000',
     background: '#fff',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    tabIconDefault: '#ccc',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#fff',
+    background: '#000',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    tabIconDefault: '#ccc',
     tabIconSelected: tintColorDark,
   },
 };
+
+export const CATEGORIES = [
+  {
+    id: '1',
+    name: 'Électroniques',
+    criteria: [
+      { 
+        id: '1', 
+        name: 'Marque', 
+        type: 'select' as const, 
+        options: ['Apple', 'Samsung', 'Huawei', 'Google', 'Xiaomi', 'Autre'], 
+        required: true 
+      },
+      { 
+        id: '2', 
+        name: 'Couleur', 
+        type: 'select' as const, 
+        options: ['Noir', 'Blanc', 'Bleu', 'Rouge', 'Vert', 'Rose', 'Gris', 'Autre'], 
+        required: true 
+      },
+      { 
+        id: '3', 
+        name: 'Modèle', 
+        type: 'text' as const, 
+        required: false 
+      },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Vêtements',
+    criteria: [
+      { 
+        id: '4', 
+        name: 'Type', 
+        type: 'select' as const, 
+        options: ['Veste', 'Pantalon', 'T-shirt', 'Robe', 'Chaussures', 'Chapeau', 'Écharpe', 'Gants'], 
+        required: true 
+      },
+      { 
+        id: '5', 
+        name: 'Couleur', 
+        type: 'select' as const, 
+        options: ['Noir', 'Blanc', 'Bleu', 'Rouge', 'Vert', 'Jaune', 'Rose', 'Violet', 'Marron', 'Gris'], 
+        required: true 
+      },
+      { 
+        id: '6', 
+        name: 'Taille', 
+        type: 'select' as const, 
+        options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], 
+        required: false 
+      },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Bijoux',
+    criteria: [
+      { 
+        id: '7', 
+        name: 'Type', 
+        type: 'select' as const, 
+        options: ['Bague', 'Collier', 'Bracelet', 'Montre', 'Boucles d\'oreilles', 'Broche'], 
+        required: true 
+      },
+      { 
+        id: '8', 
+        name: 'Matériau', 
+        type: 'select' as const, 
+        options: ['Or', 'Argent', 'Acier', 'Plastique', 'Cuir', 'Tissu', 'Autre'], 
+        required: true 
+      },
+    ],
+  },
+  {
+    id: '4',
+    name: 'Sacs et Portefeuilles',
+    criteria: [
+      { 
+        id: '9', 
+        name: 'Type', 
+        type: 'select' as const, 
+        options: ['Sac à main', 'Sac à dos', 'Portefeuille', 'Sacoche', 'Trousse', 'Valise'], 
+        required: true 
+      },
+      { 
+        id: '10', 
+        name: 'Couleur', 
+        type: 'select' as const, 
+        options: ['Noir', 'Marron', 'Blanc', 'Bleu', 'Rouge', 'Vert', 'Autre'], 
+        required: true 
+      },
+      { 
+        id: '11', 
+        name: 'Marque', 
+        type: 'text' as const, 
+        required: false 
+      },
+    ],
+  },
+  {
+    id: '5',
+    name: 'Documents',
+    criteria: [
+      { 
+        id: '12', 
+        name: 'Type', 
+        type: 'select' as const, 
+        options: ['Carte d\'identité', 'Passeport', 'Permis de conduire', 'Carte vitale', 'Carte bancaire', 'Autre document'], 
+        required: true 
+      },
+      { 
+        id: '13', 
+        name: 'Nom sur le document', 
+        type: 'text' as const, 
+        required: false 
+      },
+    ],
+  },
+  {
+    id: '6',
+    name: 'Clés',
+    criteria: [
+      { 
+        id: '14', 
+        name: 'Type', 
+        type: 'select' as const, 
+        options: ['Clés de maison', 'Clés de voiture', 'Clés de bureau', 'Autre'], 
+        required: true 
+      },
+      { 
+        id: '15', 
+        name: 'Porte-clés', 
+        type: 'text' as const, 
+        required: false 
+      },
+    ],
+  },
+];

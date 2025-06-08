@@ -1,9 +1,32 @@
 export interface User {
-  id: string;
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'USER' | 'ADMIN' | 'PROFESSIONAL' | 'SUPERADMIN';
+  phoneNumber?: string;
+  webSite?: string | null;
+  nickname?: string;
+  role?: string | null;
+  state?: string;
+  roleName?: string | null;
+  permissions?: any; // ou un type plus précis si connu
+  roleId?: number;
+  address?: string | null;
+  gender?: 'M' | 'F' | string;
+  registerDate?: number;
+  token?: string;
+  active?: boolean;
+  password?: string | null;
+  newPassword?: string | null;
+  locationId?: number | null;
+}
+
+
+export interface Credentials {  
+  id: string;
+  email: string;
+  password: string;
+
 }
 
 export interface Category {
@@ -21,22 +44,26 @@ export interface Criterion {
 }
 
 export interface Announcement {
-  id: string;
-  title: string;
+  id: number;
+  titre_annonce: string;
   description: string;
-  city: string;
-  postalCode: string;
-  date: string;
-  category: Category;
-  type: 'LOST' | 'FOUND';
-  photo?: string;
+  type: 'perdu' | 'retrouvé'; // 'LOST' | 'FOUND'
+  etat: string;
+  ville: string;
+  codePostal: string;
   secretQuestion?: string;
-  criteriaValues: { [key: string]: string };
-  userId: string;
-  user: User;
-  createdAt: string;
-  updatedAt: string;
+  categorieId: number;
+  localiteId: number;
+  annonceCorrespondantId?: number | null;
+  date: string | number; 
+  criteres: CritereValue[];
+  userId: number;
+  userFirstname: string;
+  userLastname: string;
+  categorie_libelle: string;
+  photo?: Photo;
 }
+
 
 export interface Match {
   id: string;
@@ -67,4 +94,18 @@ export interface CreateAnnouncementData {
   photo?: string;
   secretQuestion?: string;
   criteriaValues: { [key: string]: string };
+}
+
+export interface CritereValue {
+  id: number;
+  valueId: number;
+  libelle: string;
+  type: string;
+  value: string;
+}
+
+export interface Photo {
+  id: number;
+  name: string;
+  data: string; // base64
 }

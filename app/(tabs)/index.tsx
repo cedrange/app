@@ -27,6 +27,7 @@ export default function HomeScreen() {
     try {
       const userData = await apiService.getCurrentUser();
       setUser(userData);
+      
 
       const announcements = await apiService.getAnnouncements({ limit: 5 });
       setRecentAnnouncements(announcements);
@@ -93,7 +94,8 @@ export default function HomeScreen() {
             </Link>
           </View>
 
-          {recentAnnouncements.map((announcement) => (
+          {Array.isArray(recentAnnouncements) &&
+            recentAnnouncements.map((announcement) => (
             <AnnouncementCard
               key={announcement.id}
               announcement={announcement}

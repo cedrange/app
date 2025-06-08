@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-  SafeAreaView,
-} from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { apiService } from '../../services/api';
 import { Announcement, User } from '../../types';
 
@@ -28,9 +28,9 @@ export default function AnnouncementDetailScreen() {
     try {
       const userData = await apiService.getCurrentUser();
       setUser(userData);
-
+      
       if (typeof id === 'string') {
-        const announcementData = await apiService.getAnnouncementById(id);
+        const announcementData = await apiService.getAnnouncementById(Number(id));
         setAnnouncement(announcementData);
       }
     } catch (error) {
@@ -44,7 +44,6 @@ export default function AnnouncementDetailScreen() {
 
   const handleContactUser = () => {
     if (!announcement || !user) return;
-
     // Create a mock match ID for the chat
     const matchId = `${announcement.id}-${user.id}`;
     router.push(`/chat/${matchId}`);
@@ -105,8 +104,8 @@ export default function AnnouncementDetailScreen() {
   }
 
   const isOwner = user?.id === announcement.userId;
-  const typeColor = announcement.type === 'LOST' ? '#FF6B6B' : '#4ECDC4';
-  const typeText = announcement.type === 'LOST' ? 'Objet Perdu' : 'Objet Trouvé';
+  const typeColor = announcement.type === 'perdu' ? '#FF6B6B' : '#4ECDC4';
+  const typeText = announcement.type === 'perdu' ? 'Objet Perdu' : 'Objet Trouvé';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,7 +113,7 @@ export default function AnnouncementDetailScreen() {
         <View style={[styles.header, { backgroundColor: typeColor }]}>
           <View style={styles.typeContainer}>
             <FontAwesome 
-              name={announcement.type === 'LOST' ? 'search' : 'check-circle'} 
+              name={announcement.type === 'perdu' ? 'search' : 'check-circle'} 
               size={24} 
               color="white" 
             />
@@ -130,17 +129,17 @@ export default function AnnouncementDetailScreen() {
         </View>
 
         {announcement.photo && (
-          <Image source={{ uri: announcement.photo }} style={styles.image} />
+          <Image source={{ uri: `data:image/jpeg;base64,${announcement.photo.data}` }} style={styles.image} />
         )}
 
         <View style={styles.content}>
-          <Text style={styles.title}>{announcement.title}</Text>
+          <Text style={styles.title}>{announcement.titre_annonce}</Text>
           
           <View style={styles.metadata}>
             <View style={styles.metadataItem}>
               <FontAwesome name="map-marker" size={16} color="#666" />
               <Text style={styles.metadataText}>
-                {announcement.city}, {announcement.postalCode}
+                {announcement.ville}, {announcement.codePostal}
               </Text>
             </View>
             <View style={styles.metadataItem}>
@@ -151,7 +150,7 @@ export default function AnnouncementDetailScreen() {
             </View>
             <View style={styles.metadataItem}>
               <FontAwesome name="tag" size={16} color="#666" />
-              <Text style={styles.metadataText}>{announcement.category.name}</Text>
+              <Text style={styles.metadataText}>{announcement.categorie_libelle}</Text>
             </View>
           </View>
 
@@ -160,17 +159,17 @@ export default function AnnouncementDetailScreen() {
             <Text style={styles.description}>{announcement.description}</Text>
           </View>
 
-          {Object.keys(announcement.criteriaValues).length > 0 && (
+          {Object.keys(announcement.criteres).length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Caractéristiques</Text>
-              {announcement.category.criteria.map((criterion) => {
-                const value = announcement.criteriaValues[criterion.id];
+              {announcement.criteres.map((criterion) => {
+                const value = announcement.criteres[criterion.id];
                 if (!value) return null;
                 
                 return (
                   <View key={criterion.id} style={styles.criteriaItem}>
-                    <Text style={styles.criteriaLabel}>{criterion.name}:</Text>
-                    <Text style={styles.criteriaValue}>{value}</Text>
+                    <Text style={styles.criteriaLabel}>{criterion.libelle}:</Text>
+                    <Text style={styles.criteriaValue}>{criterion.value}</Text>
                   </View>
                 );
               })}
@@ -192,10 +191,10 @@ export default function AnnouncementDetailScreen() {
               </View>
               <View>
                 <Text style={styles.userName}>
-                  {announcement.user.firstName} {announcement.user.lastName}
+                  {announcement.userFirstname} {announcement.userLastname}
                 </Text>
                 <Text style={styles.publishDate}>
-                  Publié le {new Date(announcement.createdAt).toLocaleDateString('fr-FR')}
+                  Publié le {new Date('01-10-2025').toLocaleDateString('fr-FR')}
                 </Text>
               </View>
             </View>
