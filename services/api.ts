@@ -80,7 +80,7 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
     id: 2,
     titre_annonce: "Téléphone trouvé",
     description: "Smartphone trouvé dans le parc du Cinquantenaire",
-    type: "retrouvé",
+    type: "trouvé",
     etat: "valide",
     ville: "Bruxelles",
     codePostal: "1000",
@@ -147,7 +147,7 @@ export const apiService = {
 
   // Announcements
   getAnnouncements: async (filters?: {
-  type?: 'perdu' | 'trouvé';
+  type?: 'perdu' | 'trouve';
   city?: string;
   categoryId?: number;
   limit?: number;
@@ -206,7 +206,7 @@ export const apiService = {
   createAnnouncement: async (announcement: CreateAnnouncementData): Promise<Announcement> => {
     try {
       //const id= getCurr
-      const response = await api.post(`users/${authuser.id}/posts`, announcement);
+      const response = await api.post('users/${authuser.id}/posts', announcement);
       return response.data;
     } catch (error: any) {
       console.log('Mock creating announcement');

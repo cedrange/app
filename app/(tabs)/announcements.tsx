@@ -14,15 +14,20 @@ import { apiService } from '../../services/api';
 import { Announcement, User } from '../../types';
 import AnnouncementCard from '../../components/AnnouncementCard';
 import FilterModal from '../../components/FilterModal';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchAnnouncements } from '../../store/slices/announcementsSlice'
 
 export default function AnnouncementsScreen() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const announcements = useAppSelector(state => state.announcements.data);
+  const loading = useAppSelector(state => state.announcements.loading);
+  const error = useAppSelector(state => state.announcements.error);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<{
-    type?: 'LOST' | 'FOUND';
+    type?: 'perdu' | 'trouve';
     city?: string;
     categoryId?: string;
   }>({});
@@ -33,7 +38,7 @@ export default function AnnouncementsScreen() {
 
   useEffect(() => {
     loadAnnouncements();
-  }, [filters]);
+  }, [dispatch, filters]);
 
   const loadData = async () => {
     try {
@@ -42,15 +47,12 @@ export default function AnnouncementsScreen() {
       await loadAnnouncements();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger les données');
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   const loadAnnouncements = async () => {
     try {
-      const data = await apiService.getAnnouncements(filters);
-      setAnnouncements(data);
+      dispatch(fetchAnnouncements(filters));
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger les annonces');
     }
@@ -117,7 +119,7 @@ export default function AnnouncementsScreen() {
             {filters.type && (
               <View style={styles.filterChip}>
                 <Text style={styles.filterChipText}>
-                  {filters.type === 'LOST' ? 'Perdu' : 'Trouvé'}
+                  {filters.type === 'perdu' ? 'Perdu' : 'Trouvé'}
                 </Text>
                 <TouchableOpacity onPress={() => clearFilter('type')}>
                   <FontAwesome name="times" size={14} color="#666" />
@@ -147,7 +149,7 @@ export default function AnnouncementsScreen() {
       <FlatList
         data={announcements}
         renderItem={renderAnnouncement}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}

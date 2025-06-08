@@ -47,7 +47,7 @@ export interface Announcement {
   id: number;
   titre_annonce: string;
   description: string;
-  type: 'perdu' | 'retrouvé'; // 'LOST' | 'FOUND'
+  type: 'perdu' | 'trouvé'; // 'LOST' | 'FOUND'
   etat: string;
   ville: string;
   codePostal: string;

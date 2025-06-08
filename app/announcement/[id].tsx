@@ -1,3 +1,4 @@
+import { AppDispatch, RootState } from '@/store';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -11,18 +12,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { apiService } from '../../services/api';
-import { Announcement, User } from '../../types';
+import { fetchAnnouncementById } from '../../store/slices/announcementSlice';
+import { User } from '../../types';
 
 export default function AnnouncementDetailScreen() {
   const { id, edit } = useLocalSearchParams();
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const announcement = useSelector((state: RootState) => state.announcement.current);
+  const loading = useSelector((state: RootState) => state.announcement.loading);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -30,15 +34,12 @@ export default function AnnouncementDetailScreen() {
       setUser(userData);
       
       if (typeof id === 'string') {
-        const announcementData = await apiService.getAnnouncementById(Number(id));
-        setAnnouncement(announcementData);
+        dispatch(fetchAnnouncementById(Number(id)));
       }
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger l\'annonce');
       console.error('Error loading announcement:', error);
       router.back();
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -159,7 +160,7 @@ export default function AnnouncementDetailScreen() {
             <Text style={styles.description}>{announcement.description}</Text>
           </View>
 
-          {Object.keys(announcement.criteres).length > 0 && (
+          {announcement.criteres.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Caractéristiques</Text>
               {announcement.criteres.map((criterion) => {

@@ -7,37 +7,31 @@ import {
   TouchableOpacity,
   Alert,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { apiService } from '../../services/api';
 import { Announcement, User } from '../../types';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
+import { fetchAnnouncements } from '@/store/slices/announcementsSlice';
 
 export default function HomeScreen() {
-  const [user, setUser] = useState<User | null>(null);
-  const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+   const dispatch = useAppDispatch();
+   const { currentUser, loading, error } = useAppSelector(state => state.user);    
+   const recentAnnouncements = useAppSelector(state => state.announcements.data);
+
+ 
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      
-
-      const announcements = await apiService.getAnnouncements({ limit: 5 });
-      setRecentAnnouncements(announcements);
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les données');
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadData = () => {
+  dispatch(fetchCurrentUser());
+  dispatch(fetchAnnouncements());
+};
 
   const handleQuickAction = (type: 'LOST' | 'FOUND') => {
     router.push({
@@ -46,7 +40,7 @@ export default function HomeScreen() {
     });
   };
 
-  if (loading) {
+  if (loading || !currentUser) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
         <Text>Chargement...</Text>
@@ -59,7 +53,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.welcomeText}>
-            Bonjour {user?.firstName} !
+            Bonjour {currentUser.firstName} !
           </Text>
           <Text style={styles.subtitle}>
             Retrouvez vos objets perdus facilement
@@ -100,7 +94,7 @@ export default function HomeScreen() {
               key={announcement.id}
               announcement={announcement}
               onPress={() => router.push(`/announcement/${announcement.id}`)}
-              currentUserId={user?.id}
+              currentUserId={currentUser.id}
             />
           ))}
 
