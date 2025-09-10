@@ -1,11 +1,27 @@
 import axios from 'axios';
-import { CATEGORIES } from '../constants';
+
 import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
+import { Platform } from 'react-native';
+import { API_URL_ANDROID, API_URL_WEB, API_URL_DEVICE, API_URL_PROD } from "@env";
 
 const API_BASE_URL = 'http://localhost:5000/api/v1';
 
+const getBaseURL = () => {
+  if (__DEV__) {
+    if (Platform.OS === "android") {
+      return API_URL_ANDROID;
+    }
+    if (Platform.OS === "ios") {
+      return API_URL_DEVICE; // ou localhost selon ton cas
+      console.log("➡️ API URL utilisée :", API_URL_DEVICE);
+    }
+    return API_URL_WEB;
+  }
+  return API_URL_PROD; // prod
+};
+
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL,  
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -46,21 +62,18 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
     criteres: [
       {
         id: 1,
-        valueId: 13,
         libelle: "Marque",
         type: "text",
         value: "Apple"
       },
       {
         id: 2,
-        valueId: 14,
         libelle: "Couleur",
         type: "text",
         value: "Noir"
       },
       {
         id: 3,
-        valueId: 15,
         libelle: "Modèle",
         type: "text",
         value: "iPhone 13 Pro"
@@ -92,14 +105,12 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
     criteres: [
       {
         id: 1,
-        valueId: 13,
         libelle: "Marque",
         type: "text",
         value: "Apple"
       },
       {
         id: 2,
-        valueId: 14,
         libelle: "Couleur",
         type: "text",
         value: "Noir"
@@ -123,25 +134,25 @@ export default MOCK_ANNOUNCEMENTS;
 
 export const apiService = {
   // Auth
-  getCurrentUser: async (): Promise<User> => {
+  getCurrentUser: async (): Promise<Credentials> => {
     try {
       const response = await api.post('/auth/login', MOCK_LOGIN);
-      return response.data.data.user as User;
+      return response.data.data.user as Credentials;
     } catch (error) {
       // Fallback to mock user for development
       console.log('Using mock user for development');
-      return Promise.resolve(MOCK_USER);
+      return Promise.resolve(MOCK_LOGIN);
     }
   },
 
   // Categories
   getCategories: async (): Promise<Category[]> => {
     try {
-      const response = await api.get('/categories');
-      return response.data;
+      const response = await api.get('/category/getAll');
+      return response.data?.data || [];
     } catch (error) {
-      console.log('Using mock categories for development');
-      return Promise.resolve(CATEGORIES);
+      console.log('Erreur lors du chargement des catégories', error);
+      return [];
     }
   },
 
@@ -209,9 +220,9 @@ export const apiService = {
       const response = await api.post('users/${authuser.id}/posts', announcement);
       return response.data;
     } catch (error: any) {
-      console.log('Mock creating announcement');
+      /*console.log('Mock creating announcement');
       const category = CATEGORIES.find(c => c.id === announcement.categoryId);
-      /*const newAnnouncement: Announcement = {
+      const newAnnouncement: Announcement = {
         id: Math.random(),
         ...announcement,
         categorieId: category!,

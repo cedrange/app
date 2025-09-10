@@ -1,3 +1,5 @@
+import * as Yup from 'yup';
+
 export interface User {
   id: number;
   email: string;
@@ -29,19 +31,24 @@ export interface Credentials {
 
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  criteria: Criterion[];
+export interface Critere {
+  id: number;
+  valueId: number | null;
+  libelle: string;
+  type: string;
+  value: string | null;
+  required?: boolean; 
+  options?: string[]; // utile pour le type "select"
 }
 
-export interface Criterion {
-  id: string;
-  name: string;
-  type: 'text' | 'select' | 'number';
-  options?: string[];
-  required: boolean;
+export interface Category {
+  id: number;
+  libelle: string;
+  description: string;
+  categoryParent: number | null;
+  criteres: Critere[];
 }
+
 
 export interface Announcement {
   id: number;
@@ -84,24 +91,26 @@ export interface ChatMessage {
 }
 
 export interface CreateAnnouncementData {
-  title: string;
+  
+  titre_annonce: string;
   description: string;
-  city: string;
-  postalCode: string;
-  date: string;
-  categoryId: string;
-  type: 'LOST' | 'FOUND';
-  photo?: string;
-  secretQuestion?: string;
-  criteriaValues: { [key: string]: string };
+  ville: string;
+  type: 'perdu' | 'trouvé'; // 'LOST' | 'FOUND'
+  codePostal: string;
+  secretQuestion: string;
+  categorieId: number;
+  date: string; 
+  criteres: CritereValue[];
+  photo?: Photo;
 }
 
 export interface CritereValue {
   id: number;
-  valueId: number;
   libelle: string;
   type: string;
   value: string;
+  required?: boolean; 
+  options?: string[]; // utile pour le type "select"
 }
 
 export interface Photo {
