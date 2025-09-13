@@ -16,14 +16,13 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { apiService } from '../../services/api';
-import { Category, CreateAnnouncementData, Critere, CritereValue } from '../../types';
+import { Category, CreateAnnouncementData, mapFormToPostAddingDTO, Critere, CritereValue } from '../../types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCategories } from '@/store/slices/categoriesSlice';
 import { FormProvider, useForm, Controller } from 'react-hook-form';
 import ImagePickerField from '@/components/imagePickerField';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-
 
 const announcementSchema = yup.object().shape({
     titre_annonce: yup.string().required('Le titre est obligatoire'),
@@ -104,8 +103,7 @@ export default function AddAnnouncementScreen() {
 
   const handleCriteriaChange = (criterionId: number, newValue: string) => {
     const currentCriteres = watch('criteres') || [];
-    const existingIndex = currentCriteres.findIndex((c) => c.id === criterionId);
-    
+    const existingIndex = currentCriteres.findIndex((c) => c.id === criterionId);    
     if (existingIndex >= 0) {
       // Update existing criteria
       const updatedCriteres = [...currentCriteres];
@@ -129,8 +127,46 @@ export default function AddAnnouncementScreen() {
     }
   };
 
-  const onSubmit = async (data: CreateAnnouncementData) => {
+  const onSubmit = async (data: any) => {
     try {
+      
+      // 1. Créer l'annonce sans l'image
+      const payload = mapFormToPostAddingDTO(data ) as any;
+
+      const res = await apiService.createAnnouncement(payload);
+      console.log("Submitting announcement:", res);
+      const announcement = res.data;
+      const id = announcement.id as number;
+      console.log("Created announcement ID:", id);
+
+      // 2. Si une image existe → upload séparé
+      if (data.image) {
+      //console.log("Payload for announcement:", payload);
+        const formData = new FormData();
+        formData.append("image", {
+          uri: data.image.uri || data.imagePreview, // chemin de l'image
+          name: data.image._data?.name || "photo.jpg",
+          type: data.image._data?.type || "image/jpeg",
+        } as any);
+
+        await apiService.uploadAnnouncementPhoto(id, formData);
+      }
+
+      // 3. Succès
+      Alert.alert("Succès", "Votre annonce a été publiée avec succès !", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+      Alert.alert("Erreur", "Impossible de publier l'annonce");
+    }
+  };  
+
+
+
+  /*const onSubmit = async (data:any) => {
+    try {
+      console.log('Submitting announcement:', data.image);
       await apiService.createAnnouncement(data);
       Alert.alert(
         'Succès', 
@@ -141,7 +177,7 @@ export default function AddAnnouncementScreen() {
       Alert.alert('Erreur', 'Impossible de publier l\'annonce');
       console.error('Error creating announcement:', error);
     } 
-  };
+  };*/
 
   const renderCriteriaInput = (criterion: Critere) => {
     const currentCriteres = watch('criteres') || [];

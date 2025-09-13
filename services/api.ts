@@ -3,8 +3,9 @@ import axios from 'axios';
 import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
 import { Platform } from 'react-native';
 import { API_URL_ANDROID, API_URL_WEB, API_URL_DEVICE, API_URL_PROD } from "@env";
+import { store } from '@/store';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = 'http://10.0.2.2:5000/api/v1';
 
 const getBaseURL = () => {
   if (__DEV__) {
@@ -19,6 +20,9 @@ const getBaseURL = () => {
   }
   return API_URL_PROD; // prod
 };
+
+
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,  
@@ -165,6 +169,9 @@ export const apiService = {
   offset?: number;
 }): Promise<Announcement[]> => {
   try {
+    const authUser = store.getState().user.currentUser;
+    console.log("Fetching announcements with filters:",authUser?.id);
+    
     const response = await api.get(`users/1/posts`, { params: filters });
 
     if (response.status === 204 || !response.data?.data) {
@@ -214,25 +221,50 @@ export const apiService = {
     }
   },
 
-  createAnnouncement: async (announcement: CreateAnnouncementData): Promise<Announcement> => {
-    try {
-      //const id= getCurr
-      const response = await api.post('users/${authuser.id}/posts', announcement);
-      return response.data;
-    } catch (error: any) {
-      /*console.log('Mock creating announcement');
-      const category = CATEGORIES.find(c => c.id === announcement.categoryId);
-      const newAnnouncement: Announcement = {
-        id: Math.random(),
-        ...announcement,
-        categorieId: category!,
-        userId: MOCK_USER.id,        
-      };
-      MOCK_ANNOUNCEMENTS.push(newAnnouncement);
-      return Promise.resolve(newAnnouncement);*/
-      return error;
+  // Uploader la photo
+  uploadAnnouncementPhoto: (id: number, formData: FormData) =>
+    api.post(`annonces/${id}/photos`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+  }),
+
+ 
+  createAnnouncement: async (announcement: CreateAnnouncementData): Promise<any> => {
+  try {
+    const authUser = store.getState().user.currentUser;
+    const token = authUser?.token; // supposons que tu as le token JWT 
+    if (!authUser?.id) {
+      throw new Error("Utilisateur non connecté ou ID manquant");
     }
-  },
+
+    // Transformer le payload pour correspondre à Postman
+    const payload = {
+      ...announcement                                   // ajouter id vide
+    };
+
+    const response = await fetch(`http://10.0.2.2:5000/api/v1/users/${authUser.id}/posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authUser.token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      // Récupère le message d'erreur du serveur
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Erreur création annonce: ${response.status} ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("createAnnouncement fetch error:", error);
+    throw error;
+  }
+},
+
+
 
   updateAnnouncement: async (id: number, announcement: Partial<CreateAnnouncementData>): Promise<Announcement> => {
     try {

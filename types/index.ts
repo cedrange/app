@@ -90,8 +90,7 @@ export interface ChatMessage {
   };
 }
 
-export interface CreateAnnouncementData {
-  
+export interface CreateAnnouncementData {  
   titre_annonce: string;
   description: string;
   ville: string;
@@ -118,3 +117,27 @@ export interface Photo {
   name: string;
   data: string; // base64
 }
+
+
+function mapFormToPostAddingDTO(data: CreateAnnouncementData) {
+  // transforme la liste de critères en un objet { "5": "valeur", "7": "valeur" }
+  const critereMap: Record<number,string> = {};
+  data.criteres.forEach(c => {
+    critereMap[c.id] = c.value;
+  });
+
+  return {
+    titre: data.titre_annonce,
+    description: data.description,
+    ville: data.ville,
+    type: data.type,
+    codePostal: data.codePostal,
+    secretQuestion: data.secretQuestion || "",
+    categorie: Number(data.categorieId),
+    date: `${data.date}T00:00:00`, // forcer format ISO
+    critereValues: critereMap,
+    photo: data.photo || null,
+    id: null
+  };
+}
+export { mapFormToPostAddingDTO };
