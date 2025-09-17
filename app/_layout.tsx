@@ -62,6 +62,13 @@ function RootLayoutNav() {
           }} 
         />
         <Stack.Screen 
+          name="announcement/edit/[id]" 
+          options={{ 
+            title: 'Modification de l\'annonce',
+            presentation: 'modal' 
+          }} 
+        />
+        <Stack.Screen 
           name="matches/[id]" 
           options={{ 
             title: 'Correspondances',

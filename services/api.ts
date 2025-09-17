@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
-import { Platform } from 'react-native';
-import { API_URL_ANDROID, API_URL_WEB, API_URL_DEVICE, API_URL_PROD } from "@env";
 import { store } from '@/store';
+import { API_URL_ANDROID, API_URL_DEVICE, API_URL_PROD, API_URL_WEB } from "@env";
+import { Platform } from 'react-native';
+import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/v1';
 
@@ -14,15 +14,11 @@ const getBaseURL = () => {
     }
     if (Platform.OS === "ios") {
       return API_URL_DEVICE; // ou localhost selon ton cas
-      console.log("➡️ API URL utilisée :", API_URL_DEVICE);
     }
     return API_URL_WEB;
   }
   return API_URL_PROD; // prod
 };
-
-
-
 
 const api = axios.create({
   baseURL: API_BASE_URL,  
@@ -52,7 +48,7 @@ const MOCK_LOGIN: Credentials = {
 const MOCK_ANNOUNCEMENTS: Announcement[] = [
   {
     id: 1,
-    titre_annonce: "iPhone 13 Pro perdu",
+    titre: "iPhone 13 Pro perdu",
     description: "iPhone 13 Pro noir perdu près de la gare centrale",
     type: "perdu",
     etat: "valide",
@@ -169,9 +165,6 @@ export const apiService = {
   offset?: number;
 }): Promise<Announcement[]> => {
   try {
-    const authUser = store.getState().user.currentUser;
-    console.log("Fetching announcements with filters:",authUser?.id);
-    
     const response = await api.get(`users/1/posts`, { params: filters });
 
     if (response.status === 204 || !response.data?.data) {
@@ -209,10 +202,10 @@ export const apiService = {
   }
 },
 
-  getAnnouncementById: async (id: number): Promise<Announcement | null> => {
+  getAnnouncementById: async (id: number): Promise<any | null> => {
     try {
       const response = await api.get(`/posts/${id}`);
-      console.log("affiche une annonce"+response.data.data);
+      //console.log("affiche une annonce"+response);
       
       return response.data.data;
     } catch (error) {
@@ -227,67 +220,54 @@ export const apiService = {
       headers: { "Content-Type": "multipart/form-data" },
   }),
 
+  // Mise à jour de la photo d'une annonce
+  updateAnnouncementPhoto: (id: number, formData: FormData) =>
+    api.post(`photo/${id}/update`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+  }),
+
  
   createAnnouncement: async (announcement: CreateAnnouncementData): Promise<any> => {
-  try {
-    const authUser = store.getState().user.currentUser;
-    const token = authUser?.token; // supposons que tu as le token JWT 
-    if (!authUser?.id) {
-      throw new Error("Utilisateur non connecté ou ID manquant");
-    }
-
-    // Transformer le payload pour correspondre à Postman
-    const payload = {
-      ...announcement                                   // ajouter id vide
-    };
-
-    const response = await fetch(`http://10.0.2.2:5000/api/v1/users/${authUser.id}/posts`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${authUser.token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      // Récupère le message d'erreur du serveur
-      const errorData = await response.json().catch(() => null);
-      throw new Error(`Erreur création annonce: ${response.status} ${JSON.stringify(errorData)}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error: any) {
-    console.error("createAnnouncement fetch error:", error);
-    throw error;
-  }
-},
-
-
-
-  updateAnnouncement: async (id: number, announcement: Partial<CreateAnnouncementData>): Promise<Announcement> => {
     try {
-      const response = await api.put(`/announcements/${id}`, announcement);
+      const authUser = store.getState().user.currentUser;
+      // authuser doit être défini dans ce scope
+      //console.log('userId dans createAnnouncement:', authUser?.id);      
+      const response = await api.post(`/users/${authUser?.id}/posts`, announcement);
       return response.data;
-    } catch (error) {
-      /*console.log('Mock updating announcement');
-      const index = MOCK_ANNOUNCEMENTS.findIndex(a => a.id === id);
-      if (index !== -1) {
-        MOCK_ANNOUNCEMENTS[index] = {
-          ...MOCK_ANNOUNCEMENTS[index],
-          ...announcement,
-          updatedAt: new Date().toISOString()
-        };
-        return Promise.resolve(MOCK_ANNOUNCEMENTS[index]);
-      }*/
-      throw new Error('Announcement not found');
+    } catch (error: any) {
+      console.error("createAnnouncement error:", error);
+      throw error; // relancer pour que l'appelant puisse catch
     }
+  },
+
+
+  updateAnnouncement: async (id: number, announcement: any): Promise<Announcement> => {
+    try {
+      const payload = {
+        ...announcement,
+        date: new Date(announcement.date).getTime(),
+        categorie: announcement.categorieId, // backend attend "categorie"
+        critereValues: Object.fromEntries(
+          (announcement.criteres || []).map(c => [c.id, c.value])
+        ),
+      };
+      const response = await api.put(`/posts/${id}`, payload);
+      console.log("Response from updateAnnouncement:", response);
+            
+    if (response.status >= 200 && response.status < 300) {
+      return response.data.data || response.data;
+    }
+    return response.data;
+  } catch (error) {
+    console.error('updateAnnouncement error:', error);
+    throw new Error('Erreur lors de la mise à jour de l’annonce');
+  }
   },
 
   deleteAnnouncement: async (id: number): Promise<void> => {
     try {
-      await api.delete(`/announcements/${id}`);
+      
+      await api.delete(`/posts/${id}/post`);
     } catch (error) {
       console.log('Mock deleting announcement');
       const index = MOCK_ANNOUNCEMENTS.findIndex(a => a.id === id);

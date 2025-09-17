@@ -15,14 +15,14 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { apiService } from '../../services/api';
 import { fetchAnnouncementById } from '../../store/slices/announcementSlice';
-import { User } from '../../types';
+import { Credentials, User } from '../../types';
 
 export default function AnnouncementDetailScreen() {
   const { id, edit } = useLocalSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const announcement = useSelector((state: RootState) => state.announcement.current);
   const loading = useSelector((state: RootState) => state.announcement.loading);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User| Credentials | null>(null);
   
   useEffect(() => {
     loadData();
@@ -56,9 +56,18 @@ export default function AnnouncementDetailScreen() {
   };
 
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    Alert.alert('Information', 'Fonctionnalité de modification à implémenter');
-  };
+  if (!announcement) return;
+
+  try {
+    router.push({
+      pathname: "/announcement/edit/[id]",
+      params: { id: announcement.id.toString(), edit: "true" },
+    });
+  } catch (error) {
+    Alert.alert("Erreur", "Impossible d’ouvrir l’éditeur d’annonce");
+    console.error("Error navigating to edit:", error);
+  }
+};
 
   const handleDelete = async () => {
     if (!announcement) return;

@@ -52,6 +52,7 @@ export interface Category {
 
 export interface Announcement {
   id: number;
+  titre: string;
   titre_annonce: string;
   description: string;
   type: 'perdu' | 'trouvé'; // 'LOST' | 'FOUND'
@@ -62,7 +63,7 @@ export interface Announcement {
   categorieId: number;
   localiteId: number;
   annonceCorrespondantId?: number | null;
-  date: string | number; 
+  date: string; 
   criteres: CritereValue[];
   userId: number;
   userFirstname: string;
@@ -91,6 +92,7 @@ export interface ChatMessage {
 }
 
 export interface CreateAnnouncementData {  
+  titre: string;
   titre_annonce: string;
   description: string;
   ville: string;

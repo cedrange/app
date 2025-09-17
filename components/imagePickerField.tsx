@@ -5,14 +5,18 @@ import useImagePicker from '../hooks/useImagePicker' // Assure-toi que le hook e
 
 const ImagePickerField = ({ control }:any) => {
   const { handleImagePick } = useImagePicker()
-  const imagePreview = useWatch({ name: 'imagePreview', control })
+  const photo = useWatch({ name: 'photo', control })
+
+  const imageUri = photo?.data
+    ? `data:image/png;base64,${photo.data}` // ou .jpg selon ton type
+    : undefined;
 
    return (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>Photo</Text>
       <TouchableOpacity style={styles.photoButton} onPress={handleImagePick}>
-        {imagePreview ? (
-          <Image source={{ uri: imagePreview }} style={styles.photo} />
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.photo} />
         ) : (
           <View style={styles.photoPlaceholder}>
             <FontAwesome name="camera" size={40} color="#ccc" />

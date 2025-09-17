@@ -128,17 +128,12 @@ export default function AddAnnouncementScreen() {
   };
 
   const onSubmit = async (data: any) => {
-    try {
-      
+    try {      
       // 1. Créer l'annonce sans l'image
       const payload = mapFormToPostAddingDTO(data ) as any;
-
       const res = await apiService.createAnnouncement(payload);
-      console.log("Submitting announcement:", res);
       const announcement = res.data;
       const id = announcement.id as number;
-      console.log("Created announcement ID:", id);
-
       // 2. Si une image existe → upload séparé
       if (data.image) {
       //console.log("Payload for announcement:", payload);
@@ -151,7 +146,6 @@ export default function AddAnnouncementScreen() {
 
         await apiService.uploadAnnouncementPhoto(id, formData);
       }
-
       // 3. Succès
       Alert.alert("Succès", "Votre annonce a été publiée avec succès !", [
         { text: "OK", onPress: () => router.back() },
