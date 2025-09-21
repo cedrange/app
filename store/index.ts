@@ -2,8 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import announcementReducer from './slices/announcementSlice';
 import announcementsReducer from './slices/announcementsSlice';
 import userReducer from './slices/userSlice';
-import categoriesReducer from './slices/categoriesSlice'
 import userAnnouncementsReducer from './slices/userAnnouncementsSlice';
+import categoriesReducer from './slices/categoriesSliceNew';
+
 
 export const store = configureStore({
   reducer: {

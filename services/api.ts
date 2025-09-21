@@ -1,24 +1,10 @@
 import axios from 'axios';
 
 import { store } from '@/store';
-import { API_URL_ANDROID, API_URL_DEVICE, API_URL_PROD, API_URL_WEB } from "@env";
-import { Platform } from 'react-native';
 import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/v1';
 
-const getBaseURL = () => {
-  if (__DEV__) {
-    if (Platform.OS === "android") {
-      return API_URL_ANDROID;
-    }
-    if (Platform.OS === "ios") {
-      return API_URL_DEVICE; // ou localhost selon ton cas
-    }
-    return API_URL_WEB;
-  }
-  return API_URL_PROD; // prod
-};
 
 const api = axios.create({
   baseURL: API_BASE_URL,  
@@ -48,6 +34,7 @@ const MOCK_LOGIN: Credentials = {
 const MOCK_ANNOUNCEMENTS: Announcement[] = [
   {
     id: 1,
+    titre_annonce: "iPhone 13 Pro perdu",
     titre: "iPhone 13 Pro perdu",
     description: "iPhone 13 Pro noir perdu près de la gare centrale",
     type: "perdu",
@@ -92,6 +79,7 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
   {
     id: 2,
     titre_annonce: "Téléphone trouvé",
+    titre: "Téléphone trouvé",
     description: "Smartphone trouvé dans le parc du Cinquantenaire",
     type: "trouvé",
     etat: "valide",
@@ -149,7 +137,9 @@ export const apiService = {
   getCategories: async (): Promise<Category[]> => {
     try {
       const response = await api.get('/category/getAll');
-      return response.data?.data || [];
+      console.log("Categories fetched:", response.data.data);
+      
+      return response.data.data || [];
     } catch (error) {
       console.log('Erreur lors du chargement des catégories', error);
       return [];
@@ -222,11 +212,11 @@ export const apiService = {
 
   // Mise à jour de la photo d'une annonce
   updateAnnouncementPhoto: (id: number, formData: FormData) =>
-    api.post(`photo/${id}/update`, formData, {
+       api.post(`photo/${id}/update`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
   }),
 
- 
+  // CRUD Announcements 
   createAnnouncement: async (announcement: CreateAnnouncementData): Promise<any> => {
     try {
       const authUser = store.getState().user.currentUser;
@@ -253,10 +243,6 @@ export const apiService = {
       };
       const response = await api.put(`/posts/${id}`, payload);
       console.log("Response from updateAnnouncement:", response);
-            
-    if (response.status >= 200 && response.status < 300) {
-      return response.data.data || response.data;
-    }
     return response.data;
   } catch (error) {
     console.error('updateAnnouncement error:', error);

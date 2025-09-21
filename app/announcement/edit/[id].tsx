@@ -16,7 +16,7 @@ import {
     View,
 } from "react-native";
 import * as yup from "yup";
-import DatePicker from "react-native-date-picker";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiService } from "@/services/api";
 import { RootState } from "@/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -132,17 +132,21 @@ export default function EditAnnouncementScreen() {
     try {
       setLoading(true);
       await apiService.updateAnnouncement(Number(id), data);
-      if (data.photo && data.photo.data) {
+      /*if (data.photo && data.photo.data) {
         //console.log("Payload for announcement:", payload);
             const formData = new FormData();
             formData.append("image", {
             data: data.photo.data,
             name: data.photo.name,
-            } as any);      
+            } as any);  
+            console.log('les données photo modifée: ',formData);    
             await apiService.updateAnnouncementPhoto(data.photo.id, formData);
-        }
+        }*/
       Alert.alert("Succès", "Annonce mise à jour avec succès", [
-        { text: "OK", onPress: () => router.back() },
+        { text: "OK", onPress: () => {
+        // Redirige vers la liste des annonces
+        router.replace("/(tabs)/announcements");
+      }, },
       ]);
     } catch (e) {
       Alert.alert("Erreur", "Impossible de mettre à jour l’annonce");
@@ -296,44 +300,51 @@ export default function EditAnnouncementScreen() {
             <Text style={styles.errorText}>{errors.codePostal.message}</Text>
           )}
 
-          {/* --- Date --- */}
-          <Text style={styles.label}>
+         {/* --- Date --- */}
+            <Text style={styles.label}>
             Date <Text style={styles.required}>*</Text>
             </Text>
+
             <Controller
             control={control}
             name="date"
             render={({ field: { onChange, value } }) => {
-                const [open, setOpen] = useState(false);
+                const [showPicker, setShowPicker] = useState(false);
+
                 return (
                 <>
                     <TouchableOpacity
                     style={styles.textInput}
-                    onPress={() => setOpen(true)}
+                    onPress={() => setShowPicker(true)}
                     >
                     <Text>
                         {value ? new Date(value).toLocaleDateString() : "Choisir une date"}
                     </Text>
                     </TouchableOpacity>
 
-                    <DatePicker
-                    modal
-                    open={open}
-                    date={value ? new Date(value) : new Date()}
-                    mode="date"
-                    onConfirm={(date) => {
-                        setOpen(false);
-                        onChange(date.toISOString()); // ✅ stocke ISO string dans le form
-                    }}
-                    onCancel={() => setOpen(false)}
+                    {showPicker && (
+                    <DateTimePicker
+                        value={value ? new Date(value) : new Date()}
+                        mode="date"
+                        display="default"
+                        maximumDate={new Date()} // Empêche de choisir une date future
+                        onChange={(event, selectedDate) => {
+                        setShowPicker(false);
+                        if (selectedDate) {
+                            onChange(selectedDate.toISOString()); // stocke ISO string dans le form
+                        }
+                        }}
                     />
+                    )}
                 </>
                 );
             }}
             />
+
             {errors.date && (
             <Text style={styles.errorText}>{errors.date.message}</Text>
             )}
+
 
           {/* --- Catégorie --- */}
           <Text style={styles.label}>
@@ -367,10 +378,12 @@ export default function EditAnnouncementScreen() {
           )}
 
           {/* --- Critères dynamiques --- */}
-          <Text style={styles.label}>
-            Critères <Text style={styles.required}>*</Text>
-            </Text>
+          
           {watch("criteres")?.map((critere, index) => (
+            <View key={critere.id || index}>
+            <Text style={styles.label}>
+              Critères <Text style={styles.required}>*</Text>
+            </Text>
             <Controller
               key={critere.id}
               control={control}
@@ -387,7 +400,7 @@ export default function EditAnnouncementScreen() {
                 </View>
               )}
             />
-          ))}
+          </View>))}
 
           {/* --- Question secrète --- */}
           

@@ -1,37 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-  ActivityIndicator,
-} from 'react-native';
-import { Link, router } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Announcement, User } from '../../types';
-import AnnouncementCard from '../../components/AnnouncementCard';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchCurrentUser } from '@/store/slices/userSlice';
 import { fetchAnnouncements } from '@/store/slices/announcementsSlice';
+import { fetchCategories } from '@/store/slices/categoriesSliceNew';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Link, router } from 'expo-router';
+import React, { useEffect } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import AnnouncementCard from '../../components/AnnouncementCard';
 
 export default function HomeScreen() {
    const dispatch = useAppDispatch();
    const { currentUser, loading, error } = useAppSelector(state => state.user);    
    const recentAnnouncements = useAppSelector(state => state.announcements.data);
-
- 
+   
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = () => {
-  dispatch(fetchCurrentUser());
-  dispatch(fetchAnnouncements());
-};
+    dispatch(fetchCategories());
+    dispatch(fetchCurrentUser());
+    dispatch(fetchAnnouncements());
+  };
 
   const handleQuickAction = (type: 'LOST' | 'FOUND') => {
     router.push({

@@ -1,28 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Image,
-  SafeAreaView,
-  Button
-} from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
-import { router, useLocalSearchParams } from 'expo-router';
-import { apiService } from '../../services/api';
-import { Category, CreateAnnouncementData, mapFormToPostAddingDTO, Critere, CritereValue } from '../../types';
+import ImagePickerField from '@/components/imagePickerField';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCategories } from '@/store/slices/categoriesSlice';
-import { FormProvider, useForm, Controller } from 'react-hook-form';
-import ImagePickerField from '@/components/imagePickerField';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { Picker } from '@react-native-picker/picker';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import * as yup from 'yup';
+import { apiService } from '../../services/api';
+import { Category, CreateAnnouncementData, Critere, CritereValue, mapFormToPostAddingDTO } from '../../types';
 
 const announcementSchema = yup.object().shape({
     titre_annonce: yup.string().required('Le titre est obligatoire'),
@@ -76,7 +74,7 @@ export default function AddAnnouncementScreen() {
 
   useEffect(() => {
     loadCategories();
-  }, [dispatch]);
+  }, []);
   
   useEffect(() => {
     const categorySelected = categories.find((c) => c.id === watch('categorieId')) || null;
@@ -93,12 +91,8 @@ export default function AddAnnouncementScreen() {
     }
   }, [watch('categorieId'), categories, setValue]);
 
-  const loadCategories = async () => {
-    try {
-      dispatch(fetchCategories());
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les catégories');
-    }
+  const loadCategories = () => {
+      dispatch(fetchCategories());      
   };
 
   const handleCriteriaChange = (criterionId: number, newValue: string) => {
@@ -133,22 +127,30 @@ export default function AddAnnouncementScreen() {
       const payload = mapFormToPostAddingDTO(data ) as any;
       const res = await apiService.createAnnouncement(payload);
       const announcement = res.data;
+      console.log("L'id de la nouvelle annonce: ", announcement.id);
       const id = announcement.id as number;
+      
+      console.log("Le contenu de la reponse du backend : ", announcement);
+      console.log("Le contenu de l'image à envoyer au serveur' : ", data);
+
       // 2. Si une image existe → upload séparé
-      if (data.image) {
-      //console.log("Payload for announcement:", payload);
+      if (data.imagePreview) {      
         const formData = new FormData();
         formData.append("image", {
-          uri: data.image.uri || data.imagePreview, // chemin de l'image
-          name: data.image._data?.name || "photo.jpg",
-          type: data.image._data?.type || "image/jpeg",
+          uri: data.imagePreview, // chemin de l'image
+          name:"photo.jpg",
+          type: "image/jpeg",
         } as any);
-
-        await apiService.uploadAnnouncementPhoto(id, formData);
+        
+        const repo = await apiService.uploadAnnouncementPhoto(id, formData);
+        console.log("Le contenu de l'image à renvoyer par le serveur' : ", repo);
       }
       // 3. Succès
       Alert.alert("Succès", "Votre annonce a été publiée avec succès !", [
-        { text: "OK", onPress: () => router.back() },
+        { text: "OK", onPress: () =>{
+        // Redirige vers la liste des annonces
+        router.replace("/(tabs)/announcements");
+      }, },
       ]);
     } catch (error) {
       console.error("Error creating announcement:", error);
@@ -156,22 +158,6 @@ export default function AddAnnouncementScreen() {
     }
   };  
 
-
-
-  /*const onSubmit = async (data:any) => {
-    try {
-      console.log('Submitting announcement:', data.image);
-      await apiService.createAnnouncement(data);
-      Alert.alert(
-        'Succès', 
-        'Votre annonce a été publiée avec succès !',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de publier l\'annonce');
-      console.error('Error creating announcement:', error);
-    } 
-  };*/
 
   const renderCriteriaInput = (criterion: Critere) => {
     const currentCriteres = watch('criteres') || [];
@@ -457,17 +443,22 @@ export default function AddAnnouncementScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
-          onPress={handleSubmit(onSubmit)}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Publication...' : 'Publier l\'annonce'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bouton */}
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSubmit(onSubmit, (errors) => {
+                  console.log("❌ Erreurs de validation:", errors);
+                  })}
+                disabled={loading}
+              >
+               {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Publier l'annonce</Text>
+                )}
+              </TouchableOpacity>
+            </View>
     </SafeAreaView>
   );
 }

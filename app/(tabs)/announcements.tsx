@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import AnnouncementCard from '../../components/AnnouncementCard';
 import FilterModal from '../../components/FilterModal';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchAnnouncements } from '../../store/slices/announcementsSlice'
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AnnouncementsScreen() {
   
@@ -31,6 +32,12 @@ export default function AnnouncementsScreen() {
     city?: string;
     categoryId?: string;
   }>({});
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAnnouncements();
+    }, [filters])
+  );
 
   useEffect(() => {
     loadData();
