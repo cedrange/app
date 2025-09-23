@@ -14,10 +14,11 @@ import {
   View
 } from 'react-native';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function HomeScreen() {
    const dispatch = useAppDispatch();
-   const { currentUser, loading, error } = useAppSelector(state => state.user);    
+   const { user, logout, isLoading } = useAuth();    
    const recentAnnouncements = useAppSelector(state => state.announcements.data);
    
 
@@ -27,7 +28,6 @@ export default function HomeScreen() {
 
   const loadData = () => {
     dispatch(fetchCategories());
-    dispatch(fetchCurrentUser());
     dispatch(fetchAnnouncements());
   };
 
@@ -38,7 +38,9 @@ export default function HomeScreen() {
     });
   };
 
-  if (loading || !currentUser) {
+  if (!user || isLoading ) {
+    console.log('user loading or not found', user);
+    
     return (
       <SafeAreaView style={styles.centeredContainer}>
         <Text>Chargement...</Text>
@@ -51,7 +53,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.welcomeText}>
-            Bonjour {currentUser.firstName} !
+            Bonjour {user.firstName} !
           </Text>
           <Text style={styles.subtitle}>
             Retrouvez vos objets perdus facilement
@@ -92,7 +94,7 @@ export default function HomeScreen() {
               key={announcement.id}
               announcement={announcement}
               onPress={() => router.push(`/announcement/${announcement.id}`)}
-              currentUserId={currentUser.id}
+              currentUserId={user.id}
             />
           ))}
 

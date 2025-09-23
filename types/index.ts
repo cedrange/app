@@ -120,6 +120,42 @@ export interface Photo {
   data: string; // base64
 }
 
+export interface AuthResponse {
+  user: User;
+  accesToken: string;
+  refreshToken?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+export interface SocialAuthRequest {
+  provider: 'google' | 'facebook' | 'apple';
+  token: string;
+  userInfo?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
+export interface AuthState {
+  user: User | null;
+  accesToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
 
 function mapFormToPostAddingDTO(data: CreateAnnouncementData) {
   // transforme la liste de critères en un objet { "5": "valeur", "7": "valeur" }

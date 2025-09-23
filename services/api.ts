@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-import { store } from '@/store';
 import { Announcement, Category, ChatMessage, CreateAnnouncementData, Credentials, Match, User } from '../types';
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/v1';
@@ -121,18 +120,7 @@ export default MOCK_ANNOUNCEMENTS;
 
 
 export const apiService = {
-  // Auth
-  getCurrentUser: async (): Promise<Credentials> => {
-    try {
-      const response = await api.post('/auth/login', MOCK_LOGIN);
-      return response.data.data.user as Credentials;
-    } catch (error) {
-      // Fallback to mock user for development
-      console.log('Using mock user for development');
-      return Promise.resolve(MOCK_LOGIN);
-    }
-  },
-
+ 
   // Categories
   getCategories: async (): Promise<Category[]> => {
     try {
@@ -219,10 +207,10 @@ export const apiService = {
   // CRUD Announcements 
   createAnnouncement: async (announcement: CreateAnnouncementData): Promise<any> => {
     try {
-      const authUser = store.getState().user.currentUser;
+      //const authUser = store.getState().user.currentUser;
       // authuser doit être défini dans ce scope
       //console.log('userId dans createAnnouncement:', authUser?.id);      
-      const response = await api.post(`/users/${authUser?.id}/posts`, announcement);
+      const response = await api.post(`/users/1/posts`, announcement);
       return response.data;
     } catch (error: any) {
       console.error("createAnnouncement error:", error);
