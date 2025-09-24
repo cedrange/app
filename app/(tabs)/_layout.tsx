@@ -25,9 +25,9 @@ export default function TabLayout() {
 
           if (route.name === 'index') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'profile') {
+          } else if (route.name === 'profile/index') {
             iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'settings') {
+          } else if (route.name === 'add-announcement') {
             iconName = focused ? 'settings' : 'settings-outline';
           } else {
             iconName = 'help-outline';
@@ -62,7 +62,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/index"
         options={{
           title: 'Profil',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,

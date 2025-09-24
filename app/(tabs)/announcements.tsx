@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
-import { apiService } from '../../services/api';
+import { apiService } from '../../services/apiService';
 import { Announcement, User } from '../../types';
 import AnnouncementCard from '../../components/AnnouncementCard';
 import FilterModal from '../../components/FilterModal';
@@ -20,7 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function AnnouncementsScreen() {
   
-  const [user, setUser] = useState<User | null>(null);
+  const {user} = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
   const announcements = useAppSelector(state => state.announcements.data);
   const loading = useAppSelector(state => state.announcements.loading);
@@ -35,27 +35,17 @@ export default function AnnouncementsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadAnnouncements();
-    }, [filters])
+      const fetchData = async () => {
+        try {
+          await dispatch(fetchAnnouncements(filters));
+        } catch (error) {
+          Alert.alert('Erreur', 'Impossible de charger les annonces');
+        }
+      };
+      fetchData();
+    }, [filters, dispatch])
   );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    loadAnnouncements();
-  }, [dispatch, filters]);
-
-  const loadData = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      await loadAnnouncements();
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les données');
-    } 
-  };
 
   const loadAnnouncements = async () => {
     try {

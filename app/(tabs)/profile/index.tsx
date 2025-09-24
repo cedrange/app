@@ -8,7 +8,7 @@ export default function ProfileIndexScreen() {
   useEffect(() => {
     // Rediriger automatiquement vers le profil de l'utilisateur connecté
     if (user?.id) {
-      router.replace(`/profile/${user.id}`);
+      router.replace(`/(tabs)/profile/${user.id}`);
     }
   }, [user]);
 

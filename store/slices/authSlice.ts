@@ -1,8 +1,9 @@
 // store/authSlice.ts
+import { authService } from '@/services/authService';
 import { AuthState, LoginCredentials, SignupCredentials, User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { authService } from '../../services/authService';
+
 
 const initialState: AuthState = {
   user: null,
@@ -16,7 +17,7 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials) => {
-    const response = await authService.login(credentials);
+    const response = await authService.login(credentials);  
     await AsyncStorage.setItem('token', response.token);
     await AsyncStorage.setItem('user', JSON.stringify(response.user));
     return response;

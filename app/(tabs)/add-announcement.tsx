@@ -19,7 +19,7 @@ import {
   View
 } from 'react-native';
 import * as yup from 'yup';
-import { apiService } from '../../services/api';
+import { apiService } from '../../services/apiService';
 import { Category, CreateAnnouncementData, Critere, CritereValue, mapFormToPostAddingDTO } from '../../types';
 
 const announcementSchema = yup.object().shape({

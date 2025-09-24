@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { store } from '@/store/store';
+import { tokenService } from "./tokenService";
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/v1';
 
@@ -11,17 +11,14 @@ const api = axios.create({
   },
 });
 +
-// Ajouter automatiquement le token si dispo
-api.interceptors.request.use(
-  (config) => {
-    const state = store.getState();
-    const token = state.auth?.user?.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+
+// Ajout du token à chaque requête
+api.interceptors.request.use(async (config) => {
+  const token = await tokenService.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default api;

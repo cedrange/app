@@ -5,15 +5,17 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
-import { GiftedChat, IMessage } from 'react-native-gifted-chat';
+import { GiftedChat, IMessage, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useLocalSearchParams } from 'expo-router';
-import { apiService } from '../services/api';
+import { apiService } from '../services/apiService';
 import { ChatMessage, User } from '../types';
+import { useSelector } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ChatScreen() {
   const { matchId } = useLocalSearchParams();
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  const {user} = useSelector  ((state: any) => state.auth);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,9 +24,6 @@ export default function ChatScreen() {
 
   const loadData = async () => {
     try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-
       if (typeof matchId === 'string') {
         const chatMessages = await apiService.getChatMessages(matchId);
         
@@ -94,11 +93,20 @@ export default function ChatScreen() {
         scrollToBottomComponent={() => null}
         renderTime={() => null}
         showAvatarForEveryMessage={false}
-        textInputStyle={styles.textInput}
-        inputToolbarStyle={styles.inputToolbar}
-        sendButtonProps={{
-          containerStyle: styles.sendButton,
-        }}
+        textInputProps={styles.textInput}
+        renderInputToolbar={(props) => (
+          <InputToolbar
+            {...props}
+            containerStyle={styles.inputToolbar}
+          />
+        )}
+        renderSend={(props) => (
+          <Send {...props}>
+            <View style={styles.sendButton}>
+              <Ionicons name="send" size={28} color="#007AFF" />
+            </View>
+          </Send>
+        )}
       />
     </SafeAreaView>
   );

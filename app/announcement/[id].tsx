@@ -13,7 +13,7 @@ import {
     View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { apiService } from '../../services/api';
+import { apiService } from '../../services/apiService';
 import { fetchAnnouncementById } from '../../store/slices/announcementSlice';
 import { Credentials, User } from '../../types';
 
@@ -22,17 +22,14 @@ export default function AnnouncementDetailScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const announcement = useSelector((state: RootState) => state.announcement.current);
   const loading = useSelector((state: RootState) => state.announcement.loading);
-  const [user, setUser] = useState<User| Credentials | null>(null);
+  const {user} = useSelector((state: RootState) => state.auth);
   
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      
+    try {     
       if (typeof id === 'string') {
         dispatch(fetchAnnouncementById(Number(id)));
       }
