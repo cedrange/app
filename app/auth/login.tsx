@@ -26,7 +26,7 @@ import { AppDispatch, RootState } from '../../store/store';
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,14 +84,15 @@ export default function LoginScreen() {
     try {
       const resultAction = await dispatch(login({ email, password }));
       // Vérifie si le login a réussi
-      if (login.fulfilled.match(resultAction)) {
+      setTimeout(() => {
+        if (login.fulfilled.match(resultAction)) {
         console.log('Login successful, navigating to main app');        
         router.replace('/(tabs)/announcements');
       } else {
         console.log("login failed");
         
         Alert.alert('Erreur', 'Login échoué');
-      }
+      }}, 100);     
     } catch (err) {
       console.log("connect error");
       
