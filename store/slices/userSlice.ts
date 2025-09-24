@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../types';
-import { apiService } from '../../services/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserState {
   currentUser: User | null;
@@ -19,7 +19,7 @@ export const fetchCurrentUser = createAsyncThunk(
   'user/fetchCurrentUser',
   async (_, thunkAPI) => {
     try {
-      const user = await apiService.getCurrentUser();
+      const user = useAuth().user;
       return user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.message || 'Erreur lors du chargement de l’utilisateur');

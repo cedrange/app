@@ -15,12 +15,13 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { apiService } from '../../services/apiService';
 import { fetchAnnouncementById } from '../../store/slices/announcementSlice';
-import { Credentials, User } from '../../types';
+import { useAppSelector } from '@/store/hooks';
+
 
 export default function AnnouncementDetailScreen() {
   const { id, edit } = useLocalSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const announcement = useSelector((state: RootState) => state.announcement.current);
+  const announcement = useAppSelector(state => state.announcement.current);
   const loading = useSelector((state: RootState) => state.announcement.loading);
   const {user} = useSelector((state: RootState) => state.auth);
   
@@ -30,8 +31,8 @@ export default function AnnouncementDetailScreen() {
 
   const loadData = async () => {
     try {     
-      if (typeof id === 'string') {
-        dispatch(fetchAnnouncementById(Number(id)));
+      if (typeof id === 'string') {        
+        dispatch(fetchAnnouncementById(Number(id)));        
       }
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger l\'annonce');
@@ -53,18 +54,17 @@ export default function AnnouncementDetailScreen() {
   };
 
   const handleEdit = () => {
-  if (!announcement) return;
-
-  try {
-    router.push({
-      pathname: "/announcement/edit/[id]",
-      params: { id: announcement.id.toString(), edit: "true" },
-    });
-  } catch (error) {
-    Alert.alert("Erreur", "Impossible d’ouvrir l’éditeur d’annonce");
-    console.error("Error navigating to edit:", error);
-  }
-};
+    if (!announcement) return;
+    try {
+      router.push({
+        pathname: "/announcement/edit/[id]",
+        params: { id: announcement.id.toString(), edit: "true" },
+      });
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible d’ouvrir l’éditeur d’annonce");
+      console.error("Error navigating to edit:", error);
+    }
+  };
 
   const handleDelete = async () => {
     if (!announcement) return;

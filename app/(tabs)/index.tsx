@@ -4,7 +4,7 @@ import { fetchCategories } from '@/store/slices/categoriesSliceNew';
 import { fetchCurrentUser } from '@/store/slices/userSlice';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, router } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { use, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -18,19 +18,18 @@ import { useAuth } from '../../hooks/useAuth';
 
 export default function HomeScreen() {
    const dispatch = useAppDispatch();
-   const { currentUser, loading, error } = useAppSelector(state => state.user);    
+   const currentUser = useAuth().user 
    const recentAnnouncements = useAppSelector(state => state.announcements.data);
-   const { user, logout } = useAuth();
-   
+    const loading = useAppSelector(state => state.user.loading);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData();       
+  }, [dispatch]);
 
   const loadData = () => {
     dispatch(fetchCategories());
-    dispatch(fetchCurrentUser());
     dispatch(fetchAnnouncements());
+    dispatch(fetchCurrentUser());
   };
 
   const handleQuickAction = (type: 'LOST' | 'FOUND') => {

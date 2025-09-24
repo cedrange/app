@@ -45,17 +45,13 @@ export default function LoginScreen() {
     responseType: AuthSession.ResponseType.Token,
   });
 
-  /*useEffect(() => {
-    console.log('au debut du useEffect', { isLoading, isAuthenticated, hasNavigated: hasNavigated});
-    if (!isLoading && isAuthenticated && !hasNavigated) {
-      setHasNavigated(true);
-      setTimeout(() => {
-        router.replace('/(tabs)/announcements');
-      }, 0);
+  // Si l'utilisateur est déjà connecté, rediriger
+  useEffect(() => {
+    if (user && !isLoading) {
+      console.log('👤 Utilisateur déjà connecté, redirection...');
+      router.replace('/(tabs)');
     }
-    console.log('fin useeffect', { isLoading, isAuthenticated, hasNavigated: hasNavigated });
-
-  }, [isAuthenticated,hasNavigated, isLoading]);*/
+  }, [user, isLoading]);
 
   useEffect(() => {
     if (googleResponse?.type === 'success' && googleResponse.authentication) {

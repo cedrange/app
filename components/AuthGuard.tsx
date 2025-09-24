@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { router, useSegments } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
@@ -10,18 +10,19 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || hasNavigated.current) return;
 
     const inAuthGroup = segments[0] === 'auth';
     const inProtectedGroup = segments[0] === '(tabs)';
 
     if (!isAuthenticated && inProtectedGroup) {
-      // Rediriger vers l'écran de connexion si pas authentifié
+      hasNavigated.current = true;
       router.replace('/auth/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Rediriger vers l'app si déjà authentifié
+      hasNavigated.current = true;
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, segments]);
@@ -29,7 +30,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#02162cff" />
       </View>
     );
   }

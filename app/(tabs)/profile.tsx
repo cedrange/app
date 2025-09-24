@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-  ActivityIndicator,
-} from 'react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchUserAnnouncements } from '@/store/slices/userAnnouncementsSlice';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
-import { apiService } from '../../../services/apiService';
-import { Announcement, User } from '../../../types';
-import { fetchCurrentUser } from '@/store/slices/userSlice';
-import AnnouncementCard from '../../../components/AnnouncementCard';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchUserAnnouncements } from '@/store/slices/userAnnouncementsSlice';
+import React, { useEffect } from 'react';
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import AnnouncementCard from '../../components/AnnouncementCard';
+import { apiService } from '../../services/apiService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 
 
 export default function ProfileScreen() {
   const dispatch = useAppDispatch();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { currentUser, loading, error } = useAppSelector(state => state.user);  
+  const  currentUser= useAuth().user;
+  const loading = useAppSelector(state => state.user.loading);
   const userAnnouncements = useAppSelector(state => state.userAnnouncements.data);
 
   const isOwnProfile = currentUser?.id?.toString() === id;
