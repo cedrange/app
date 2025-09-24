@@ -8,7 +8,8 @@ import { useColorScheme } from 'react-native';
 
 // Redux
 import { Provider } from 'react-redux';
-import { store } from '../store'; 
+import { store } from '../store/store';
+import { AuthGuard } from '@/components/AuthGuard';
 
 export {
   ErrorBoundary
@@ -42,7 +43,9 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <RootLayoutNav />
+      <AuthGuard>
+        <RootLayoutNav />
+      </AuthGuard>      
     </Provider>
   );
 }
@@ -53,6 +56,7 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="auth" />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 
           name="announcement/[id]" 

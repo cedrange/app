@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "674144258552",
+    "project_id": "retrouve-ton-objet",
+    "storage_bucket": "retrouve-ton-objet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674144258552:android:e89c57ca18e772bdc02e0d",
+        "android_client_info": {
+          "package_name": "com.langecodeur.efinderApp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "674144258552-4qs5q8kgrokepuq2ghdu8costq1me88p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2CGNGAPvAo6LtxIi0V5flpiZKkm4wr14"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "674144258552-4qs5q8kgrokepuq2ghdu8costq1me88p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

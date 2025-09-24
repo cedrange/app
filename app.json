@@ -1,22 +1,33 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Efinder",
+    "slug": "Efinder app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.langecodeur.efinder",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "362344650284-0hudct9v5a3jsjo23blgom0kmra8d6lk.apps.googleusercontent.com"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.yourcompany.authexpoapp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -34,10 +45,28 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application accède à vos photos pour vous permettre de définir une photo de profil."
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.362344650284-0hudct9v5a3jsjo23blgom0kmra8d6lk"
+        }
+      ],
       "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "process.env.EXPO_PUBLIC_API_URL",
+      "googleClientId": "process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID",
+      "facebookClientId": "process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_ID"
     }
   }
 }

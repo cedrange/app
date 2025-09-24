@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
-import { apiService } from '../../services/api';
-import { Announcement, User } from '../../types';
-import { fetchCurrentUser } from '../../store/slices/userSlice';
-import AnnouncementCard from '../../components/AnnouncementCard';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { apiService } from '../../../services/apiService';
+import { Announcement, User } from '../../../types';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
+import AnnouncementCard from '../../../components/AnnouncementCard';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchUserAnnouncements } from '@/store/slices/userAnnouncementsSlice';
 
 

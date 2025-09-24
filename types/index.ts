@@ -23,6 +23,55 @@ export interface User {
   locationId?: number | null;
 }
 
+export interface AuthResponse {
+  user: User;
+  token: string;
+  refreshToken?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+export interface SocialAuthRequest {
+  provider: 'google' | 'facebook' | 'apple';
+  token: string;
+  userInfo?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignupCredentials {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
 
 export interface Credentials {  
   id: string;

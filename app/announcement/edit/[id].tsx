@@ -1,5 +1,11 @@
+import { apiService } from "@/services/api";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchCategories } from "@/store/slices/categoriesSlice";
+import { RootState } from "@/store/store";
+import { Category, CreateAnnouncementData } from "@/types";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { yupResolver } from "@hookform/resolvers/yup";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -15,14 +21,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import * as yup from "yup";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { apiService } from "@/services/api";
-import { RootState } from "@/store";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCategories } from "@/store/slices/categoriesSlice";
-import { Category, CreateAnnouncementData } from "@/types";
 import { useSelector } from "react-redux";
+import * as yup from "yup";
 
 import ImagePickerField from "@/components/imagePickerField";
 

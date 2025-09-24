@@ -14,11 +14,13 @@ import {
   View
 } from 'react-native';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function HomeScreen() {
    const dispatch = useAppDispatch();
    const { currentUser, loading, error } = useAppSelector(state => state.user);    
    const recentAnnouncements = useAppSelector(state => state.announcements.data);
+   const { user, logout } = useAuth();
    
 
   useEffect(() => {
