@@ -1,175 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Image,
-  SafeAreaView,
-} from 'react-native';
+import ImagePickerField from '@/components/imagePickerField';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchCategories } from '@/store/slices/categoriesSlice';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { apiService } from '../../services/api';
-import { Category, CreateAnnouncementData } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import * as yup from 'yup';
+import { apiService } from '../../services/apiService';
+import { Category, CreateAnnouncementData, Critere, CritereValue, mapFormToPostAddingDTO } from '../../types';
+
+const announcementSchema = yup.object().shape({
+    titre_annonce: yup.string().required('Le titre est obligatoire'),
+    description: yup.string().required('La description est obligatoire'),
+    ville: yup.string().required('La ville est obligatoire'),
+    codePostal: yup.string().required('Le code postal est obligatoire'),
+    date: yup.string().required('La date est obligatoire'),
+    categorieId: yup.number().typeError('Sélectionnez une catégorie valide').required('La catégorie est obligatoire'),
+    type: yup.mixed<'perdu' | 'trouvé'>().oneOf(['perdu', 'trouvé']).required(),
+    secretQuestion: yup.string()
+                      .default('')
+                      .when('type', {
+                        is: 'trouvé',
+                        then: (schema) => schema.required('La question secrète est obligatoire'),
+                        otherwise: (schema) => schema.transform(() => '').default(''),
+                      }),
+    criteres: yup.array().of(yup.object().shape({
+        id: yup.number().required('ID requis'),
+        libelle: yup.string().required('Libellé requis'),
+        type: yup.string().required('Type requis'),
+        value: yup.string().required('Ce champ est obligatoire'),
+      })
+    )
+    .required('Les critères sont requis'),
+});
 
 export default function AddAnnouncementScreen() {
+  
   const params = useLocalSearchParams();
-  const preselectedType = params.type as 'LOST' | 'FOUND' | undefined;
-
-  const [formData, setFormData] = useState<CreateAnnouncementData>({
-    title: '',
-    description: '',
-    city: '',
-    postalCode: '',
-    date: new Date().toISOString().split('T')[0],
-    categoryId: '',
-    type: preselectedType || 'LOST',
-    photo: '',
-    secretQuestion: '',
-    criteriaValues: {},
-  });
-
-  const [categories, setCategories] = useState<Category[]>([]);
+  const preselectedType = params.type as 'perdu' | 'trouvé';
+  const dispatch = useAppDispatch();
+  const { data: categories, loading, error } = useAppSelector(state => state.categories);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  const methods = useForm<CreateAnnouncementData>({
+    resolver: yupResolver(announcementSchema),
+    defaultValues: {
+      titre_annonce: '',
+      description: '',
+      ville: '',
+      codePostal: '',
+      date: new Date().toISOString().split('T')[0],
+      categorieId: 0,
+      type: preselectedType || 'perdu',
+      secretQuestion: '',
+      criteres: [],
+    },
+  });
+  
+  const { watch, setValue, handleSubmit, control, formState: { errors } } = methods;
 
   useEffect(() => {
     loadCategories();
   }, []);
-
+  
   useEffect(() => {
-    const category = categories.find(c => c.id === formData.categoryId);
-    setSelectedCategory(category || null);
+    const categorySelected = categories.find((c) => c.id === watch('categorieId')) || null;
+    setSelectedCategory(categorySelected);
     // Reset criteria values when category changes
-    if (category) {
-      const newCriteriaValues: { [key: string]: string } = {};
-      category.criteria.forEach(criterion => {
-        newCriteriaValues[criterion.id] = '';
-      });
-      setFormData(prev => ({ ...prev, criteriaValues: newCriteriaValues }));
+    if (categorySelected) {
+      const criteres = categorySelected.criteres.map((critere) => ({
+        id: critere.id,
+        libelle: critere.libelle,
+        type: critere.type,
+        value: '',
+      }));
+      setValue('criteres', criteres);
     }
-  }, [formData.categoryId, categories]);
+  }, [watch('categorieId'), categories, setValue]);
 
-  const loadCategories = async () => {
-    try {
-      const data = await apiService.getCategories();
-      setCategories(data);
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les catégories');
-    }
+  const loadCategories = () => {
+      dispatch(fetchCategories());      
   };
 
-  const handleImagePick = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
-      Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie photos');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setFormData(prev => ({ ...prev, photo: result.assets[0].uri }));
-    }
-  };
-
-  const handleCriteriaChange = (criterionId: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      criteriaValues: {
-        ...prev.criteriaValues,
-        [criterionId]: value,
-      },
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.title.trim()) {
-      Alert.alert('Erreur', 'Le titre est obligatoire');
-      return false;
-    }
-    if (!formData.description.trim()) {
-      Alert.alert('Erreur', 'La description est obligatoire');
-      return false;
-    }
-    if (!formData.city.trim()) {
-      Alert.alert('Erreur', 'La ville est obligatoire');
-      return false;
-    }
-    if (!formData.postalCode.trim()) {
-      Alert.alert('Erreur', 'Le code postal est obligatoire');
-      return false;
-    }
-    if (!formData.categoryId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
-      return false;
-    }
-
-    // Validate required criteria
-    if (selectedCategory) {
-      for (const criterion of selectedCategory.criteria) {
-        if (criterion.required && !formData.criteriaValues[criterion.id]?.trim()) {
-          Alert.alert('Erreur', `Le champ "${criterion.name}" est obligatoire`);
-          return false;
-        }
+  const handleCriteriaChange = (criterionId: number, newValue: string) => {
+    const currentCriteres = watch('criteres') || [];
+    const existingIndex = currentCriteres.findIndex((c) => c.id === criterionId);    
+    if (existingIndex >= 0) {
+      // Update existing criteria
+      const updatedCriteres = [...currentCriteres];
+      updatedCriteres[existingIndex] = {
+        ...updatedCriteres[existingIndex],
+        value: newValue,
+      };
+      setValue('criteres', updatedCriteres);
+    } else {
+      // Add new criteria
+      const criterion = selectedCategory?.criteres.find(c => c.id === criterionId);
+      if (criterion) {
+        const newCritere: CritereValue = {
+          id: criterionId,
+          libelle: criterion.libelle,
+          type: criterion.type,
+          value: newValue,
+        };
+        setValue('criteres', [...currentCriteres, newCritere]);
       }
     }
-
-    // Validate secret question for FOUND items
-    if (formData.type === 'FOUND' && !formData.secretQuestion?.trim()) {
-      Alert.alert('Erreur', 'La question secrète est obligatoire pour les objets trouvés');
-      return false;
-    }
-
-    return true;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+  const onSubmit = async (data: any) => {
+    try {      
+      // 1. Créer l'annonce sans l'image
+      const payload = mapFormToPostAddingDTO(data ) as any;
+      const res = await apiService.createAnnouncement(payload);
+      const announcement = res.data;
+      console.log("L'id de la nouvelle annonce: ", announcement.id);
+      const id = announcement.id as number;
+      
+      console.log("Le contenu de la reponse du backend : ", announcement);
+      console.log("Le contenu de l'image à envoyer au serveur' : ", data);
 
-    setLoading(true);
-    try {
-      await apiService.createAnnouncement(formData);
-      Alert.alert(
-        'Succès', 
-        'Votre annonce a été publiée avec succès !',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      // 2. Si une image existe → upload séparé
+      if (data.imagePreview) {      
+        const formData = new FormData();
+        formData.append("image", {
+          uri: data.imagePreview, // chemin de l'image
+          name:"photo.jpg",
+          type: "image/jpeg",
+        } as any);
+        
+        const repo = await apiService.uploadAnnouncementPhoto(id, formData);
+        console.log("Le contenu de l'image à renvoyer par le serveur' : ", repo);
+      }
+      // 3. Succès
+      Alert.alert("Succès", "Votre annonce a été publiée avec succès !", [
+        { text: "OK", onPress: () =>{
+        // Redirige vers la liste des annonces
+        router.replace("/(tabs)/announcements");
+      }, },
+      ]);
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de publier l\'annonce');
-      console.error('Error creating announcement:', error);
-    } finally {
-      setLoading(false);
+      console.error("Error creating announcement:", error);
+      Alert.alert("Erreur", "Impossible de publier l'annonce");
     }
-  };
+  };  
 
-  const renderCriteriaInput = (criterion: any) => {
+
+  const renderCriteriaInput = (criterion: Critere) => {
+    const currentCriteres = watch('criteres') || [];
+    const selectedCritere = currentCriteres.find(c => c.id === criterion.id);
+    const selectedValue = selectedCritere?.value ?? '';
+
     switch (criterion.type) {
       case 'select':
         return (
           <View key={criterion.id} style={styles.inputGroup}>
             <Text style={styles.label}>
-              {criterion.name}
-              {criterion.required && <Text style={styles.required}> *</Text>}
+              {criterion.libelle} <Text style={styles.required}> *</Text>
             </Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.criteriaValues[criterion.id] || ''}
+                selectedValue={selectedValue}
                 onValueChange={(value) => handleCriteriaChange(criterion.id, value)}
                 style={styles.picker}
               >
-                <Picker.Item label={`Sélectionner ${criterion.name.toLowerCase()}`} value="" />
+                <Picker.Item label={`Sélectionner ${criterion.libelle.toLowerCase()}`} value="" />
                 {criterion.options?.map((option: string) => (
                   <Picker.Item key={option} label={option} value={option} />
                 ))}
@@ -183,15 +191,17 @@ export default function AddAnnouncementScreen() {
         return (
           <View key={criterion.id} style={styles.inputGroup}>
             <Text style={styles.label}>
-              {criterion.name}
+              {criterion.libelle}
               {criterion.required && <Text style={styles.required}> *</Text>}
             </Text>
             <TextInput
               style={styles.textInput}
-              value={formData.criteriaValues[criterion.id] || ''}
-              onChangeText={(value) => handleCriteriaChange(criterion.id, value)}
-              placeholder={`Entrer ${criterion.name.toLowerCase()}`}
+              value={selectedValue}
+              onChangeText={(text) => handleCriteriaChange(criterion.id, text)}
+              placeholder={`Entrer ${criterion.libelle.toLowerCase()}`}
               keyboardType={criterion.type === 'number' ? 'numeric' : 'default'}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
         );
@@ -206,7 +216,7 @@ export default function AddAnnouncementScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Nouvelle annonce</Text>
         <Text style={styles.subtitle}>
-          {formData.type === 'LOST' ? 'Objet perdu' : 'Objet trouvé'}
+          {watch('type') === 'perdu' ? 'Objet perdu' : 'Objet trouvé'}
         </Text>
       </View>
 
@@ -214,18 +224,18 @@ export default function AddAnnouncementScreen() {
         <TouchableOpacity
           style={[
             styles.typeButton,
-            formData.type === 'LOST' && styles.typeButtonLostActive,
+            watch('type') === 'perdu' && styles.typeButtonLostActive,
           ]}
-          onPress={() => setFormData(prev => ({ ...prev, type: 'LOST' }))}
+          onPress={() => setValue('type', 'perdu')}
         >
           <FontAwesome 
             name="search" 
             size={20} 
-            color={formData.type === 'LOST' ? 'white' : '#666'} 
+            color={watch('type') === 'perdu' ? 'white' : '#666'} 
           />
           <Text style={[
             styles.typeButtonText,
-            formData.type === 'LOST' && styles.typeButtonTextActive,
+            watch('type') === 'perdu' && styles.typeButtonTextActive,
           ]}>
             Perdu
           </Text>
@@ -234,18 +244,18 @@ export default function AddAnnouncementScreen() {
         <TouchableOpacity
           style={[
             styles.typeButton,
-            formData.type === 'FOUND' && styles.typeButtonFoundActive,
+            watch('type') === 'trouvé' && styles.typeButtonFoundActive,
           ]}
-          onPress={() => setFormData(prev => ({ ...prev, type: 'FOUND' }))}
+          onPress={() => setValue('type', 'trouvé')}
         >
           <FontAwesome 
             name="check" 
             size={20} 
-            color={formData.type === 'FOUND' ? 'white' : '#666'} 
+            color={watch('type') === 'trouvé' ? 'white' : '#666'} 
           />
           <Text style={[
             styles.typeButtonText,
-            formData.type === 'FOUND' && styles.typeButtonTextActive,
+            watch('type') === 'trouvé' && styles.typeButtonTextActive,
           ]}>
             Trouvé
           </Text>
@@ -258,28 +268,46 @@ export default function AddAnnouncementScreen() {
             <Text style={styles.label}>
               Titre <Text style={styles.required}>*</Text>
             </Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.title}
-              onChangeText={(value) => setFormData(prev => ({ ...prev, title: value }))}
-              placeholder="Ex: iPhone 13 Pro perdu"
-              maxLength={100}
+            <Controller
+              control={control}
+              name="titre_annonce"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.textInput}
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Ex: iPhone 13 Pro perdu"
+                  maxLength={100}
+                />
+              )}
             />
+            {errors.titre_annonce && (
+              <Text style={styles.errorText}>{errors.titre_annonce.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               Description <Text style={styles.required}>*</Text>
             </Text>
-            <TextInput
-              style={[styles.textInput, styles.textArea]}
-              value={formData.description}
-              onChangeText={(value) => setFormData(prev => ({ ...prev, description: value }))}
-              placeholder="Décrivez l'objet en détail..."
-              multiline
-              numberOfLines={4}
-              maxLength={500}
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Décrivez l'objet en détail..."
+                  multiline
+                  numberOfLines={4}
+                  maxLength={500}
+                />
+              )}
             />
+            {errors.description && (
+              <Text style={styles.errorText}>{errors.description.message}</Text>
+            )}
           </View>
 
           <View style={styles.row}>
@@ -287,26 +315,44 @@ export default function AddAnnouncementScreen() {
               <Text style={styles.label}>
                 Ville <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.city}
-                onChangeText={(value) => setFormData(prev => ({ ...prev, city: value }))}
-                placeholder="Bruxelles"
+              <Controller
+                control={control}
+                name="ville"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.textInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Ex: Bruxelles"
+                  />
+                )}
               />
+              {errors.ville && (
+                <Text style={styles.errorText}>{errors.ville.message}</Text>
+              )}
             </View>
 
             <View style={[styles.inputGroup, styles.flex1]}>
               <Text style={styles.label}>
                 Code postal <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.postalCode}
-                onChangeText={(value) => setFormData(prev => ({ ...prev, postalCode: value }))}
-                placeholder="1000"
-                keyboardType="numeric"
-                maxLength={10}
+              <Controller
+                control={control}
+                name="codePostal"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.textInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Ex: 1000"
+                    keyboardType="numeric"
+                    maxLength={10}
+                  />
+                )}
               />
+              {errors.codePostal && (
+                <Text style={styles.errorText}>{errors.codePostal.message}</Text>
+              )}
             </View>
           </View>
 
@@ -314,12 +360,21 @@ export default function AddAnnouncementScreen() {
             <Text style={styles.label}>
               Date <Text style={styles.required}>*</Text>
             </Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.date}
-              onChangeText={(value) => setFormData(prev => ({ ...prev, date: value }))}
-              placeholder="YYYY-MM-DD"
+            <Controller
+              control={control}
+              name="date"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.textInput}
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="YYYY-MM-DD"
+                />
+              )}
             />
+            {errors.date && (
+              <Text style={styles.errorText}>{errors.date.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -327,70 +382,83 @@ export default function AddAnnouncementScreen() {
               Catégorie <Text style={styles.required}>*</Text>
             </Text>
             <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.categoryId}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
-                style={styles.picker}
-              >
-                <Picker.Item label="Sélectionner une catégorie" value="" />
-                {categories.map((category) => (
-                  <Picker.Item
-                    key={category.id}
-                    label={category.name}
-                    value={category.id}
-                  />
-                ))}
-              </Picker>
+              <Controller
+                control={control}
+                name="categorieId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Sélectionner une catégorie" value={0} />
+                    {categories.map((category) => (
+                      <Picker.Item
+                        key={category.id}
+                        label={category.libelle}
+                        value={category.id}
+                      />
+                    ))}
+                  </Picker>
+                )}
+              />
             </View>
+            {errors.categorieId && (
+              <Text style={styles.errorText}>{errors.categorieId.message}</Text>
+            )}
           </View>
 
-          {selectedCategory && selectedCategory.criteria.map(renderCriteriaInput)}
+          {selectedCategory?.criteres.map(renderCriteriaInput)}
 
-          {formData.type === 'FOUND' && (
+          {watch('type') === 'trouvé' && (
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Question secrète <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.secretQuestion}
-                onChangeText={(value) => setFormData(prev => ({ ...prev, secretQuestion: value }))}
-                placeholder="Ex: Quelle est la couleur de la coque ?"
-                maxLength={200}
+              <Controller
+                control={control}
+                name="secretQuestion"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.textInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Ex: quel est le nom marqué sur l'objet ?"
+                    maxLength={200}
+                  />
+                )}
               />
+              {errors.secretQuestion && (
+                <Text style={styles.errorText}>{errors.secretQuestion.message}</Text>
+              )}
               <Text style={styles.hint}>
                 Cette question sera posée à la personne qui prétend avoir perdu l'objet
               </Text>
             </View>
           )}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Photo</Text>
-            <TouchableOpacity style={styles.photoButton} onPress={handleImagePick}>
-              {formData.photo ? (
-                <Image source={{ uri: formData.photo }} style={styles.photo} />
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <FontAwesome name="camera" size={40} color="#ccc" />
-                  <Text style={styles.photoPlaceholderText}>Ajouter une photo</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
+          <FormProvider {...methods}>
+            <ImagePickerField control={control} />
+          </FormProvider>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Publication...' : 'Publier l\'annonce'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bouton */}
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSubmit(onSubmit, (errors) => {
+                  console.log("❌ Erreurs de validation:", errors);
+                  })}
+                disabled={loading}
+              >
+               {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Publier l'annonce</Text>
+                )}
+              </TouchableOpacity>
+            </View>
     </SafeAreaView>
   );
 }
@@ -500,6 +568,11 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
     fontStyle: 'italic',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 5,
   },
   photoButton: {
     backgroundColor: 'white',

@@ -1,44 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchUserAnnouncements } from '@/store/slices/userAnnouncementsSlice';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Alert,
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { router } from 'expo-router';
-import { apiService } from '../../services/api';
-import { Announcement, User } from '../../types';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { apiService } from '../../services/apiService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userAnnouncements, setUserAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const dispatch = useAppDispatch();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const  currentUser= useAuth().user;
+  const loading = useAppSelector(state => state.user.loading);
+  const userAnnouncements = useAppSelector(state => state.userAnnouncements.data);
+  
+  const isOwnProfile = currentUser?.id?.toString() === id;
+  
   useEffect(() => {
+    console.log('id param:', id);
+    
     loadData();
-  }, []);
+  }, [dispatch]);
 
   const loadData = async () => {
     try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-
-      const announcements = await apiService.getUserAnnouncements(userData.id);
-      setUserAnnouncements(announcements);
+      dispatch(fetchCurrentUser());
+      dispatch(fetchUserAnnouncements(currentUser!.id));
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger les données');
       console.error('Error loading profile data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleDeleteAnnouncement = async (announcementId: string) => {
+  const handleDeleteAnnouncement = async (announcementId: number) => {
     Alert.alert(
       'Supprimer l\'annonce',
       'Êtes-vous sûr de vouloir supprimer cette annonce ?',
@@ -50,7 +55,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await apiService.deleteAnnouncement(announcementId);
-              setUserAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+              /*setUserAnnouncements(prev => prev.filter(a => a.id !== announcementId));*/
               Alert.alert('Succès', 'Annonce supprimée avec succès');
             } catch (error) {
               Alert.alert('Erreur', 'Impossible de supprimer l\'annonce');
@@ -72,12 +77,12 @@ export default function ProfileScreen() {
   };
 
   const getAnnouncementStats = () => {
-    const lost = userAnnouncements.filter(a => a.type === 'LOST').length;
-    const found = userAnnouncements.filter(a => a.type === 'FOUND').length;
+    const lost = userAnnouncements.filter(a => a.type === 'perdu').length;
+    const found = userAnnouncements.filter(a => a.type === 'trouvé').length;
     return { lost, found, total: lost + found };
   };
 
-  if (loading) {
+  if (loading || !currentUser) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
         <Text>Chargement...</Text>
@@ -91,20 +96,23 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <TouchableOpacity 
+                onPress={() => router.push(`/profileSettings/${currentUser.id}` as any)}
+              >
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
               <FontAwesome name="user" size={40} color="white" />
             </View>
             <View style={styles.userDetails}>
               <Text style={styles.userName}>
-                {user?.firstName} {user?.lastName}
+                {currentUser?.firstName} {currentUser?.lastName}
               </Text>
-              <Text style={styles.userEmail}>{user?.email}</Text>
+              <Text style={styles.userEmail}>{currentUser?.email}</Text>
               <Text style={styles.userRole}>
-                {getRoleDisplayName(user?.role || '')}
+                {getRoleDisplayName(currentUser?.role || '')}
               </Text>
             </View>
-          </View>
+          </View></TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>
@@ -118,7 +126,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#4ECDC4' }]}>{stats.found}</Text>
-            <Text style={styles.statLabel}>Trouvés</Text>
+            <Text style={styles.statLabel}>res</Text>
           </View>
         </View>
 
@@ -147,7 +155,7 @@ export default function ProfileScreen() {
                 <AnnouncementCard
                   announcement={announcement}
                   onPress={() => router.push(`/announcement/${announcement.id}`)}
-                  currentUserId={user?.id}
+                  currentUserId={currentUser!.id}
                 />
                 <View style={styles.announcementActions}>
                   <TouchableOpacity 

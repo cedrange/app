@@ -1,3 +1,5 @@
+import * as Yup from 'yup';
+
 export interface User {
   id: number;
   email: string;
@@ -21,6 +23,55 @@ export interface User {
   locationId?: number | null;
 }
 
+export interface AuthResponse {
+  user: User;
+  token: string;
+  refreshToken?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+export interface SocialAuthRequest {
+  provider: 'google' | 'facebook' | 'apple';
+  token: string;
+  userInfo?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignupCredentials {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
 
 export interface Credentials {  
   id: string;
@@ -29,25 +80,31 @@ export interface Credentials {
 
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  criteria: Criterion[];
+export interface Critere {
+  id: number;
+  valueId: number | null;
+  libelle: string;
+  type: string;
+  value: string | null;
+  required?: boolean; 
+  options?: string[]; // utile pour le type "select"
 }
 
-export interface Criterion {
-  id: string;
-  name: string;
-  type: 'text' | 'select' | 'number';
-  options?: string[];
-  required: boolean;
+export interface Category {
+  id: number;
+  libelle: string;
+  description: string;
+  categoryParent: number | null;
+  criteres: Critere[];
 }
+
 
 export interface Announcement {
   id: number;
+  titre: string;
   titre_annonce: string;
   description: string;
-  type: 'perdu' | 'retrouvé'; // 'LOST' | 'FOUND'
+  type: 'perdu' | 'trouvé'; // 'LOST' | 'FOUND'
   etat: string;
   ville: string;
   codePostal: string;
@@ -55,7 +112,7 @@ export interface Announcement {
   categorieId: number;
   localiteId: number;
   annonceCorrespondantId?: number | null;
-  date: string | number; 
+  date: string; 
   criteres: CritereValue[];
   userId: number;
   userFirstname: string;
@@ -83,25 +140,27 @@ export interface ChatMessage {
   };
 }
 
-export interface CreateAnnouncementData {
-  title: string;
+export interface CreateAnnouncementData {  
+  titre: string;
+  titre_annonce: string;
   description: string;
-  city: string;
-  postalCode: string;
-  date: string;
-  categoryId: string;
-  type: 'LOST' | 'FOUND';
-  photo?: string;
-  secretQuestion?: string;
-  criteriaValues: { [key: string]: string };
+  ville: string;
+  type: 'perdu' | 'trouvé'; // 'LOST' | 'FOUND'
+  codePostal: string;
+  secretQuestion: string;
+  categorieId: number;
+  date: string; 
+  criteres: CritereValue[];
+  photo?: Photo;
 }
 
 export interface CritereValue {
   id: number;
-  valueId: number;
   libelle: string;
   type: string;
   value: string;
+  required?: boolean; 
+  options?: string[]; // utile pour le type "select"
 }
 
 export interface Photo {
@@ -109,3 +168,27 @@ export interface Photo {
   name: string;
   data: string; // base64
 }
+
+
+function mapFormToPostAddingDTO(data: CreateAnnouncementData) {
+  // transforme la liste de critères en un objet { "5": "valeur", "7": "valeur" }
+  const critereMap: Record<number,string> = {};
+  data.criteres.forEach(c => {
+    critereMap[c.id] = c.value;
+  });
+
+  return {
+    titre: data.titre_annonce,
+    description: data.description,
+    ville: data.ville,
+    type: data.type,
+    codePostal: data.codePostal,
+    secretQuestion: data.secretQuestion || "",
+    categorie: Number(data.categorieId),
+    date: `${data.date}T00:00:00`, // forcer format ISO
+    critereValues: critereMap,
+    photo: data.photo || null,
+    id: null
+  };
+}
+export { mapFormToPostAddingDTO };

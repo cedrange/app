@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams } from 'expo-router';
-import { apiService } from '../services/api';
+import { apiService } from '../services/apiService';
 import { User } from '../types';
+import { useSelector } from 'react-redux';
 
 interface ChatMessage {
   id: string;
@@ -29,7 +30,7 @@ export default function ChatPage() {
   const { matchId } = useLocalSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [user, setUser] = useState<User | null>(null);
+  const {user} = useSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,9 +39,6 @@ export default function ChatPage() {
 
   const loadData = async () => {
     try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-
       // Load mock messages
       const mockMessages: ChatMessage[] = [
         {
@@ -54,8 +52,8 @@ export default function ChatPage() {
         {
           id: '2',
           text: 'Salut ! Oui, avez-vous des détails supplémentaires ?',
-          userId: userData.id,
-          userName: `${userData.firstName} ${userData.lastName}`,
+          userId: user.id,
+          userName: `${user.firstName} ${user.lastName}`,
           timestamp: new Date(Date.now() - 1800000),
           isOwn: true,
         },

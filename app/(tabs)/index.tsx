@@ -1,42 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-} from 'react-native';
-import { Link, router } from 'expo-router';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchAnnouncements } from '@/store/slices/announcementsSlice';
+import { fetchCategories } from '@/store/slices/categoriesSliceNew';
+import { fetchCurrentUser } from '@/store/slices/userSlice';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { apiService } from '../../services/api';
-import { Announcement, User } from '../../types';
+import { Link, router } from 'expo-router';
+import React, { use, useEffect } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function HomeScreen() {
-  const [user, setUser] = useState<User | null>(null);
-  const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+   const dispatch = useAppDispatch();
+   const currentUser = useAuth().user 
+   const recentAnnouncements = useAppSelector(state => state.announcements.data);
+    const loading = useAppSelector(state => state.user.loading);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData();       
+  }, [dispatch]);
 
-  const loadData = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      
-
-      const announcements = await apiService.getAnnouncements({ limit: 5 });
-      setRecentAnnouncements(announcements);
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les données');
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
+  const loadData = () => {
+    dispatch(fetchCategories());
+    dispatch(fetchAnnouncements());
+    dispatch(fetchCurrentUser());
   };
 
   const handleQuickAction = (type: 'LOST' | 'FOUND') => {
@@ -46,7 +39,7 @@ export default function HomeScreen() {
     });
   };
 
-  if (loading) {
+  if (loading || !currentUser) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
         <Text>Chargement...</Text>
@@ -59,7 +52,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.welcomeText}>
-            Bonjour {user?.firstName} !
+            Bonjour {currentUser.firstName} !
           </Text>
           <Text style={styles.subtitle}>
             Retrouvez vos objets perdus facilement
@@ -100,7 +93,7 @@ export default function HomeScreen() {
               key={announcement.id}
               announcement={announcement}
               onPress={() => router.push(`/announcement/${announcement.id}`)}
-              currentUserId={user?.id}
+              currentUserId={currentUser.id}
             />
           ))}
 

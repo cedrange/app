@@ -1,44 +1,43 @@
+import { AppDispatch, RootState } from '@/store/store';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { apiService } from '../../services/api';
-import { Announcement, User } from '../../types';
+import { useDispatch, useSelector } from 'react-redux';
+import { apiService } from '../../services/apiService';
+import { fetchAnnouncementById } from '../../store/slices/announcementSlice';
+import { useAppSelector } from '@/store/hooks';
+
 
 export default function AnnouncementDetailScreen() {
   const { id, edit } = useLocalSearchParams();
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const dispatch = useDispatch<AppDispatch>();
+  const announcement = useAppSelector(state => state.announcement.current);
+  const loading = useSelector((state: RootState) => state.announcement.loading);
+  const {user} = useSelector((state: RootState) => state.auth);
+  
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, []);
 
   const loadData = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-      
-      if (typeof id === 'string') {
-        const announcementData = await apiService.getAnnouncementById(Number(id));
-        setAnnouncement(announcementData);
+    try {     
+      if (typeof id === 'string') {        
+        dispatch(fetchAnnouncementById(Number(id)));        
       }
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger l\'annonce');
       console.error('Error loading announcement:', error);
       router.back();
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -55,8 +54,16 @@ export default function AnnouncementDetailScreen() {
   };
 
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    Alert.alert('Information', 'Fonctionnalité de modification à implémenter');
+    if (!announcement) return;
+    try {
+      router.push({
+        pathname: "/announcement/edit/[id]",
+        params: { id: announcement.id.toString(), edit: "true" },
+      });
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible d’ouvrir l’éditeur d’annonce");
+      console.error("Error navigating to edit:", error);
+    }
   };
 
   const handleDelete = async () => {
@@ -159,7 +166,7 @@ export default function AnnouncementDetailScreen() {
             <Text style={styles.description}>{announcement.description}</Text>
           </View>
 
-          {Object.keys(announcement.criteres).length > 0 && (
+          {announcement.criteres.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Caractéristiques</Text>
               {announcement.criteres.map((criterion) => {

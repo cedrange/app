@@ -1,3 +1,5 @@
+import { Category } from "@/types";
+
 const tintColorLight = '#007AFF';
 const tintColorDark = '#fff';
 
@@ -18,9 +20,9 @@ export const Colors = {
   },
 };
 
-export const CATEGORIES: Category[] = [
+/*export const CATEGORIES: Category[] = [
   {
-    id: '1',
+    
     name: 'Électroniques',
     criteria: [
       { 
@@ -157,5 +159,5 @@ export const CATEGORIES: Category[] = [
     ],
   },
 ];
-
+*/
 export default Colors;

@@ -10,15 +10,16 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
-import { apiService } from '../../services/api';
+import { apiService } from '../../services/apiService';
 import { Match, Announcement, User } from '../../types';
 import AnnouncementCard from '../../components/AnnouncementCard';
+import { useSelector } from 'react-redux';
 
 export default function MatchesScreen() {
   const { id } = useLocalSearchParams();
   const [matches, setMatches] = useState<Match[]>([]);
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const {user} = useSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,13 +28,10 @@ export default function MatchesScreen() {
 
   const loadData = async () => {
     try {
-      const userData = await apiService.getCurrentUser();
-      setUser(userData);
-
       if (typeof id === 'string') {
         const [announcementData, matchesData] = await Promise.all([
-          apiService.getAnnouncementById(id),
-          apiService.getAnnouncementMatches(id)
+          apiService.getAnnouncementById(Number(id)),
+          apiService.getAnnouncementMatches(Number(id))
         ]);
         
         setAnnouncement(announcementData);
@@ -119,7 +117,7 @@ export default function MatchesScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Correspondances trouvées</Text>
         <Text style={styles.subtitle}>
-          Pour votre annonce: "{announcement.title}"
+          Pour votre annonce: "{announcement.titre}"
         </Text>
       </View>
 
