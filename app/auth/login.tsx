@@ -1,33 +1,33 @@
 // app/(tabs)/login.tsx
-import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import * as AuthSession from "expo-auth-session";
-import * as Facebook from 'expo-auth-session/providers/facebook';
-import * as Google from 'expo-auth-session/providers/google';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearError, login, socialLogin } from '../../store/slices/authSlice';
-import { AppDispatch, RootState } from '../../store/store';
+import { useRouter } from 'expo-router';
+import * as Google from 'expo-auth-session/providers/google';
+import * as Facebook from 'expo-auth-session/providers/facebook';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as AuthSession from "expo-auth-session";
+import { Ionicons } from '@expo/vector-icons';
+import { login, socialLogin, clearError } from '../../store/slices/authSlice';
+import { RootState, AppDispatch } from '../../store/store';
 
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { user, isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [hasNavigated, setHasNavigated] = useState(false);
+  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,13 +45,11 @@ export default function LoginScreen() {
     responseType: AuthSession.ResponseType.Token,
   });
 
-  // Si l'utilisateur est déjà connecté, rediriger
   useEffect(() => {
-    if (user && !isLoading) {
-      console.log('👤 Utilisateur déjà connecté, redirection...');
+    if (isAuthenticated) {
       router.replace('/(tabs)');
     }
-  }, [user, isLoading]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (googleResponse?.type === 'success' && googleResponse.authentication) {
@@ -72,31 +70,13 @@ export default function LoginScreen() {
     }
   }, [error]);
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!email || !password) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
-    try {
-      const resultAction = await dispatch(login({ email, password }));
-      // Vérifie si le login a réussi
-      setTimeout(() => {
-        if (login.fulfilled.match(resultAction)) {
-        console.log('Login successful, navigating to main app');        
-        router.replace('/(tabs)/announcements');
-      } else {
-        console.log("login failed");
-        
-        Alert.alert('Erreur', 'Login échoué');
-      }}, 100);     
-    } catch (err) {
-      console.log("connect error");
-      
-      console.error(err);
-      Alert.alert('Erreur', 'Connexion impossible');
-    }
+    dispatch(login({ email, password }));
   };
-
 
   const handleSocialAuth = async (provider: string, accessToken: string) => {
     dispatch(socialLogin({ provider, accessToken }));

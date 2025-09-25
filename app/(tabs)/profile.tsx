@@ -24,10 +24,12 @@ export default function ProfileScreen() {
   const  currentUser= useAuth().user;
   const loading = useAppSelector(state => state.user.loading);
   const userAnnouncements = useAppSelector(state => state.userAnnouncements.data);
-
+  
   const isOwnProfile = currentUser?.id?.toString() === id;
   
   useEffect(() => {
+    console.log('id param:', id);
+    
     loadData();
   }, [dispatch]);
 
@@ -94,6 +96,9 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <TouchableOpacity 
+                onPress={() => router.push(`/profileSettings/${currentUser.id}` as any)}
+              >
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
               <FontAwesome name="user" size={40} color="white" />
@@ -107,7 +112,7 @@ export default function ProfileScreen() {
                 {getRoleDisplayName(currentUser?.role || '')}
               </Text>
             </View>
-          </View>
+          </View></TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>

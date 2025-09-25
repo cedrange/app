@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '../../types';
-import { useAuth } from '@/hooks/useAuth';
+import { User } from '@/types';
+import { authService } from '@/services/authService';
 
 interface UserState {
   currentUser: User | null;
@@ -14,15 +14,32 @@ const initialState: UserState = {
   error: null,
 };
 
-// Async thunk pour récupérer l'utilisateur courant
+// 🔹 Récupérer l’utilisateur courant depuis l’API
 export const fetchCurrentUser = createAsyncThunk(
   'user/fetchCurrentUser',
   async (_, thunkAPI) => {
     try {
-      const user = useAuth().user;
+      const user = await authService.getCurrentUser();
       return user;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.message || 'Erreur lors du chargement de l’utilisateur');
+      return thunkAPI.rejectWithValue(
+        error.message || 'Erreur lors du chargement de l’utilisateur'
+      );
+    }
+  }
+);
+
+// 🔹 Mettre à jour l’utilisateur courant
+export const updateUser = createAsyncThunk(
+  'user/updateUser',
+  async (data: Partial<User>, thunkAPI) => {
+    try {
+      const updatedUser = await authService.updateUser(data); // ← appelle ton backend
+      return updatedUser;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.message || 'Erreur lors de la mise à jour de l’utilisateur'
+      );
     }
   }
 );

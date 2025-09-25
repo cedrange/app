@@ -1,3 +1,4 @@
+import { store } from '@/store/store';
 import { LoginCredentials, SignupCredentials, User } from '../types';
 import api from './api';
 import { tokenService } from './tokenService';
@@ -28,5 +29,26 @@ export const authService = {
       accessToken,
     });
     return response.data;
+  },
+
+  getCurrentUser: async (): Promise<User | null> => {
+    try {
+      const token = store.getState().auth.token;
+      const response = await api.get(`/users/.${token}`); // ← Remplace par l’ID réel ou utilise /users/me si ton API le supporte
+      return response.data;
+    } catch (error) {
+      console.log("Erreur getCurrentUser, fallback mock");
+      return Promise.resolve(null);
+    }
+  },
+
+  updateUser: async (data: Partial<User>): Promise<User| null> => {
+    try {
+      const response = await api.put('/users/me', data);
+      return response.data;
+    } catch (error) {
+      console.log("Erreur updateUser, fallback mock");
+      return Promise.resolve(null);
+    }
   }
 };
