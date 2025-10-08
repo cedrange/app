@@ -5,6 +5,7 @@ import authReducer from './slices/authSlice';
 import categoriesReducer from './slices/categoriesSliceNew';
 import userAnnouncementsReducer from './slices/userAnnouncementsSlice';
 import userReducer from './slices/userSlice';
+import { authApi } from './api/authApi';
 
 
 export const store = configureStore({
@@ -15,7 +16,10 @@ export const store = configureStore({
     userAnnouncements: userAnnouncementsReducer,
     categories: categoriesReducer,
     auth: authReducer,
-  }
+    [authApi.reducerPath]: authApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware), // Ajout du middleware RTK Query
   
 });
 

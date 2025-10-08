@@ -14,7 +14,7 @@ import {
   Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as Google from 'expo-auth-session/providers/google';
 import * as Facebook from 'expo-auth-session/providers/facebook';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -105,6 +105,8 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <Stack.Screen options={{ headerShown: false}} />
+      <Stack.Screen options={{ headerTitle: "" }} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
           <Ionicons name="lock-closed" size={80} color="#4A90E2" />
@@ -149,7 +151,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity style={styles.forgotPassword} onPress={() => router.push('/auth/forgot-password')}>
             <Text style={styles.forgotPasswordText}>Mot de passe oublié?</Text>
           </TouchableOpacity>
 
@@ -206,7 +208,7 @@ export default function LoginScreen() {
 
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Pas encore de compte? </Text>
-            <TouchableOpacity onPress={() => router.push('./signup')}>
+            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
               <Text style={styles.signupLink}>S'inscrire</Text>
             </TouchableOpacity>
           </View>

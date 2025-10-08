@@ -50,5 +50,22 @@ export const authService = {
       console.log("Erreur updateUser, fallback mock");
       return Promise.resolve(null);
     }
-  }
+  },
+
+  // 👉 Nouvelle fonction pour changer le mot de passe
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> => {
+    try {
+      const response = await api.post("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Erreur changePassword:", error);
+      throw error.response?.data || { message: "Erreur lors du changement de mot de passe" };
+    }
+  },
 };

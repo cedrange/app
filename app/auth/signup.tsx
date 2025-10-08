@@ -225,7 +225,7 @@ export default function SignupScreen() {
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Déjà un compte? </Text>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => router.push('/auth/login')}>
               <Text style={styles.loginLink}>Se connecter</Text>
             </TouchableOpacity>
           </View>
